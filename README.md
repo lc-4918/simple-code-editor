@@ -67,6 +67,18 @@ that relied on the end of the line to close the first one.
 Copy offers the document laid out, compacted, escaped for pasting between two
 quotes, or exactly as it stands.
 
+## Reading and reporting
+
+JSON and XML documents are read as they are typed, a short pause after the last
+keystroke, and the same reading runs when a document is opened or pasted. What
+stops the reading is said in words under the toolbar, with the line and the
+column, and marked in the margin of the text at the spot.
+
+The readers are strict and stop at the first problem: they report one at a
+time, not a list. Reporting several at once needs a reader that recovers from a
+problem and carries on, which these do not do. The other formats are not read
+this way, so nothing is reported for them.
+
 ## Settings
 
 - Interface language: English by default, French and Spanish available.

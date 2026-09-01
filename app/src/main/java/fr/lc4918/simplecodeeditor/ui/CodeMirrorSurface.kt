@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import fr.lc4918.simplecodeeditor.R
+import fr.lc4918.simplecodeeditor.model.Diagnostic
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.ui.theme.EditorColors
 import fr.lc4918.simplecodeeditor.ui.theme.LocalEditorColors
@@ -47,11 +48,15 @@ fun CodeMirrorSurface(
     format: DocumentFormat,
     indentWidth: Int,
     isSearchVisible: Boolean,
+    diagnostic: Diagnostic?,
     controller: CodeMirrorController,
     onContentChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEditorColors.current
+    // Resolved here, where the language of the interface is at hand, and sent
+    // over already said rather than as something for the bundle to look up.
+    val problemText = diagnostic?.let { stringResource(it.problem.labelRes) }
     val phrases = searchPhrases()
     val currentOnContentChanged by rememberUpdatedState(onContentChanged)
 
@@ -83,6 +88,9 @@ fun CodeMirrorSurface(
     LaunchedEffect(controller, colors) { controller.setColors(colors) }
     LaunchedEffect(controller, phrases) { controller.setPhrases(phrases) }
     LaunchedEffect(controller, isSearchVisible) { controller.setSearchVisible(isSearchVisible) }
+    LaunchedEffect(controller, diagnostic, problemText) {
+        controller.setDiagnostic(diagnostic?.offset, problemText)
+    }
 
     DisposableEffect(controller) {
         onDispose { controller.detach() }
@@ -156,6 +164,16 @@ class CodeMirrorController {
 
     fun setSearchVisible(visible: Boolean) {
         call("SimpleCodeEditor.setSearchVisible($visible);")
+    }
+
+    /** Marks the spot the document could not be read past, or clears the mark. */
+    fun setDiagnostic(offset: Int?, message: String?) {
+        val problem = if (offset == null || message == null) {
+            "null"
+        } else {
+            JSONObject().put("offset", offset).put("message", message).toString()
+        }
+        call("SimpleCodeEditor.setDiagnostic($problem);")
     }
 
     fun foldAll() {

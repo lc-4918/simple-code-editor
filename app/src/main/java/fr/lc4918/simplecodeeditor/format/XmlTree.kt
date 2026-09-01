@@ -1,6 +1,7 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.NodeKind
+import fr.lc4918.simplecodeeditor.model.SyntaxProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
 /**
@@ -8,8 +9,10 @@ import fr.lc4918.simplecodeeditor.model.TreeNode
  *
  * Attributes hang under their element as leaves, prefixed so they cannot be
  * mistaken for a child element. Comments, declarations and character data are
- * skipped: they carry no place in the hierarchy the view draws. A document
- * whose tags do not close leaves the view with nothing to show.
+ * skipped: they carry no place in the hierarchy the view draws.
+ *
+ * The reader is strict and stops at the first problem, saying which one and
+ * where, rather than guessing what a document whose tags do not close meant.
  */
 object XmlTree {
 
@@ -21,16 +24,27 @@ object XmlTree {
 
     private const val ATTRIBUTE_PREFIX = "@"
 
-    fun parse(content: String): TreeNode? = runCatching {
+    /** The tree, or the first problem met and where. */
+    fun read(content: String): TreeReading {
         val reader = Reader(content)
-        val roots = reader.readNodes(closingFor = null)
-        when {
-            roots.isEmpty() -> null
-            roots.size == 1 -> roots.single()
-            // Several roots, which HTML fragments often have, hang under one.
-            else -> TreeNode(name = "", kind = NodeKind.ELEMENT, children = roots)
+        return try {
+            val roots = reader.readNodes(closingFor = null)
+            when {
+                roots.isEmpty() -> throw SyntaxException(SyntaxProblem.END_OF_DOCUMENT, 0)
+                roots.size == 1 -> TreeReading.Tree(roots.single())
+                // Several roots, which HTML fragments often have, hang under one.
+                else -> TreeReading.Tree(
+                    TreeNode(name = "", kind = NodeKind.ELEMENT, children = roots),
+                )
+            }
+        } catch (problem: SyntaxException) {
+            TreeReading.Refused(
+                TextPosition.diagnosticAt(content, problem.problem, problem.offset),
+            )
         }
-    }.getOrNull()
+    }
+
+    fun parse(content: String): TreeNode? = read(content).root
 
     private class Reader(private val text: String) {
         private var index = 0
@@ -47,9 +61,12 @@ object XmlTree {
                     continue
                 }
                 if (text.startsWith("</", index)) {
+                    val at = index
                     val name = closingTagName()
-                    if (closingFor == null) fail("Unexpected closing tag")
-                    if (!name.equals(closingFor, ignoreCase = true)) fail("Mismatched closing tag")
+                    if (closingFor == null) refuse(SyntaxProblem.UNEXPECTED_CLOSING_TAG, at)
+                    if (!name.equals(closingFor, ignoreCase = true)) {
+                        refuse(SyntaxProblem.MISMATCHED_CLOSING_TAG, at)
+                    }
                     return nodes
                 }
                 if (isSkippable()) {
@@ -58,7 +75,7 @@ object XmlTree {
                 }
                 nodes.add(readElement())
             }
-            if (closingFor != null) fail("Unclosed element")
+            if (closingFor != null) refuse(SyntaxProblem.UNCLOSED_ELEMENT, text.length)
             return nodes
         }
 
@@ -72,7 +89,7 @@ object XmlTree {
         }
 
         private fun readElement(): TreeNode {
-            val end = endOfTag() ?: fail("Unterminated tag")
+            val end = endOfTag() ?: refuse(SyntaxProblem.UNTERMINATED_TAG, index)
             val tag = text.substring(index, end + 1)
             index = end + 1
 
@@ -89,7 +106,7 @@ object XmlTree {
         }
 
         private fun closingTagName(): String {
-            val end = endOfTag() ?: fail("Unterminated closing tag")
+            val end = endOfTag() ?: refuse(SyntaxProblem.UNTERMINATED_TAG, index)
             val name = text.substring(index + 2, end).trim()
             index = end + 1
             return name
@@ -102,12 +119,12 @@ object XmlTree {
             listOf("<!--" to "-->", "<![CDATA[" to "]]>").forEach { (opening, closing) ->
                 if (text.startsWith(opening, index)) {
                     val end = text.indexOf(closing, index + opening.length)
-                    if (end < 0) fail("Unterminated markup")
+                    if (end < 0) refuse(SyntaxProblem.UNTERMINATED_MARKUP, index)
                     index = end + closing.length
                     return
                 }
             }
-            val end = endOfTag() ?: fail("Unterminated declaration")
+            val end = endOfTag() ?: refuse(SyntaxProblem.UNTERMINATED_MARKUP, index)
             index = end + 1
         }
 
@@ -127,7 +144,8 @@ object XmlTree {
             return null
         }
 
-        private fun fail(reason: String): Nothing = throw IllegalArgumentException(reason)
+        private fun refuse(problem: SyntaxProblem, at: Int): Nothing =
+            throw SyntaxException(problem, at)
     }
 
     private fun tagName(tag: String): String =

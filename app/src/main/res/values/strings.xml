@@ -99,6 +99,24 @@
     <string name="search_replace_all">replace all</string>
     <string name="search_close">close</string>
 
+    <!-- Why a document cannot be read -->
+    <string name="problem_end_of_document">The document ends before it is complete</string>
+    <string name="problem_trailing_content">Content after the end of the document</string>
+    <string name="problem_unexpected_character">Unexpected character</string>
+    <string name="problem_unterminated_string">A string is never closed</string>
+    <string name="problem_expected_separator">A comma or a closing bracket was expected</string>
+    <string name="problem_expected_colon">A colon was expected after the key</string>
+    <string name="problem_expected_key">A key was expected</string>
+    <string name="problem_bad_number">This number cannot be read</string>
+    <string name="problem_bad_escape">This escape cannot be read</string>
+    <string name="problem_unknown_literal">Only true, false and null are allowed here</string>
+    <string name="problem_unterminated_tag">A tag is never closed</string>
+    <string name="problem_unclosed_element">An element is never closed</string>
+    <string name="problem_mismatched_closing_tag">This closing tag does not match the element it ends</string>
+    <string name="problem_unexpected_closing_tag">A closing tag with no element to close</string>
+    <string name="problem_unterminated_markup">A comment or a declaration is never closed</string>
+    <string name="problem_position">Line %1$d, column %2$d</string>
+
     <!-- Common -->
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">OK</string>

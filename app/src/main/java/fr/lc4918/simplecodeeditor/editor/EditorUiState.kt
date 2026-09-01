@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
+import fr.lc4918.simplecodeeditor.model.Diagnostic
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FormatCapabilities
@@ -31,6 +32,8 @@ data class EditorUiState(
     val searchQuery: String = "",
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,
+    /** Why the document cannot be read, when it cannot. */
+    val diagnostic: Diagnostic? = null,
     val statusMessageRes: Int? = null,
 ) {
     val format: DocumentFormat get() = document.format

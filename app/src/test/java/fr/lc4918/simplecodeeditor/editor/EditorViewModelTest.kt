@@ -9,6 +9,7 @@ import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FilterOperator
+import fr.lc4918.simplecodeeditor.model.SyntaxProblem
 import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
@@ -328,6 +329,74 @@ class EditorViewModelTest {
         dispatcher.scheduler.advanceUntilIdle()
 
         assertEquals("""{"a":1}""", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a document that cannot be read is reported once the typing pauses`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            model.setDocument(
+                EditorDocument.empty(DocumentFormat.JSON).copy(content = """{"a":}"""),
+            )
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val diagnostic = model.uiState.value.diagnostic!!
+            assertEquals(SyntaxProblem.UNEXPECTED_CHARACTER, diagnostic.problem)
+            assertEquals(1, diagnostic.line)
+        }
+
+    @Test
+    fun `a document that reads has nothing reported`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = """{"a":1}"""))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.diagnostic)
+    }
+
+    @Test
+    fun `an empty document is not reported as wrong`() = runTest(dispatcher) {
+        val model = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.diagnostic)
+    }
+
+    @Test
+    fun `a report is dropped once the document reads again`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = """{"a":"""))
+        dispatcher.scheduler.advanceUntilIdle()
+        assertTrue(model.uiState.value.diagnostic != null)
+
+        model.onContentChanged("""{"a":1}""")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.diagnostic)
+    }
+
+    @Test
+    fun `a format with no reader of its own is never reported`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.CSS).copy(content = "body { never closed"),
+        )
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.diagnostic)
+    }
+
+    @Test
+    fun `renaming into another format has the document read again`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.CSS).copy(content = "{oops"))
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(null, model.uiState.value.diagnostic)
+
+        model.onDocumentNameChanged("thing.json")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(model.uiState.value.diagnostic != null)
     }
 
     @Test

@@ -1,28 +1,36 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.NodeKind
+import fr.lc4918.simplecodeeditor.model.SyntaxProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
 /**
  * Reads a JSON document into the tree the hierarchical view shows.
  *
- * The reader is strict: anything it cannot read leaves it with nothing to
- * show, and the view says so rather than showing half a document. Numbers are
- * kept as they were written rather than turned into a number and back, which
- * would change how they read.
+ * The reader is strict and stops at the first problem, saying which one and
+ * where: a document it cannot read to the end is refused whole rather than
+ * shown by halves. Numbers are kept as they were written rather than turned
+ * into a number and back, which would change how they read.
  */
 object JsonTree {
 
-    fun parse(content: String): TreeNode? {
+    /** The tree, or the first problem met and where. */
+    fun read(content: String): TreeReading {
         val reader = Reader(content)
-        return runCatching {
+        return try {
             reader.skipWhitespace()
             val root = reader.readValue(name = "")
             reader.skipWhitespace()
-            if (!reader.atEnd) throw IllegalArgumentException("Trailing content")
-            root
-        }.getOrNull()
+            if (!reader.atEnd) reader.refuse(SyntaxProblem.TRAILING_CONTENT)
+            TreeReading.Tree(root)
+        } catch (problem: SyntaxException) {
+            TreeReading.Refused(
+                TextPosition.diagnosticAt(content, problem.problem, problem.offset),
+            )
+        }
     }
+
+    fun parse(content: String): TreeNode? = read(content).root
 
     private class Reader(private val text: String) {
         private var index = 0
@@ -45,7 +53,7 @@ object JsonTree {
                     if (character == '-' || character.isDigit()) {
                         TreeNode(name, NodeKind.NUMBER, value = readNumber())
                     } else {
-                        fail("Unexpected character")
+                        refuse(SyntaxProblem.UNEXPECTED_CHARACTER)
                     }
             }
         }
@@ -72,7 +80,7 @@ object JsonTree {
                         return TreeNode(name, NodeKind.OBJECT, children = children)
                     }
 
-                    else -> fail("Expected a comma or a closing brace")
+                    else -> refuse(SyntaxProblem.EXPECTED_SEPARATOR)
                 }
             }
         }
@@ -95,13 +103,14 @@ object JsonTree {
                         return TreeNode(name, NodeKind.ARRAY, children = children)
                     }
 
-                    else -> fail("Expected a comma or a closing bracket")
+                    else -> refuse(SyntaxProblem.EXPECTED_SEPARATOR)
                 }
             }
         }
 
         /** The text of the string, with its escapes turned back into characters. */
         private fun readString(): String {
+            val start = index
             expect('"')
             val out = StringBuilder()
             while (index < text.length) {
@@ -122,7 +131,7 @@ object JsonTree {
                     }
                 }
             }
-            fail("Unterminated string")
+            refuse(SyntaxProblem.UNTERMINATED_STRING, at = start)
         }
 
         private fun readEscape(): Char {
@@ -138,14 +147,14 @@ object JsonTree {
                 'r' -> '\r'
                 't' -> '\t'
                 'u' -> {
-                    if (index + 4 > text.length) fail("Truncated escape")
+                    if (index + 4 > text.length) refuse(SyntaxProblem.BAD_ESCAPE)
                     val code = text.substring(index, index + 4).toIntOrNull(16)
-                        ?: fail("Bad escape")
+                        ?: refuse(SyntaxProblem.BAD_ESCAPE)
                     index += 4
                     code.toChar()
                 }
 
-                else -> fail("Unknown escape")
+                else -> refuse(SyntaxProblem.BAD_ESCAPE)
             }
         }
 
@@ -154,7 +163,7 @@ object JsonTree {
             if (peek() == '-') index++
             while (index < text.length && (text[index].isDigit() || text[index] in ".eE+-")) index++
             val number = text.substring(start, index)
-            if (number.toDoubleOrNull() == null) fail("Bad number")
+            if (number.toDoubleOrNull() == null) refuse(SyntaxProblem.BAD_NUMBER, at = start)
             return number
         }
 
@@ -165,16 +174,23 @@ object JsonTree {
                     return option
                 }
             }
-            fail("Unknown literal")
+            refuse(SyntaxProblem.UNKNOWN_LITERAL)
         }
 
-        private fun peek(): Char = if (index < text.length) text[index] else fail("End of document")
+        private fun peek(): Char =
+            if (index < text.length) text[index] else refuse(SyntaxProblem.END_OF_DOCUMENT)
 
         private fun expect(character: Char) {
-            if (peek() != character) fail("Expected $character")
+            val expected = when (character) {
+                ':' -> SyntaxProblem.EXPECTED_COLON
+                '"' -> SyntaxProblem.EXPECTED_KEY
+                else -> SyntaxProblem.EXPECTED_SEPARATOR
+            }
+            if (peek() != character) refuse(expected)
             index++
         }
 
-        private fun fail(reason: String): Nothing = throw IllegalArgumentException(reason)
+        fun refuse(problem: SyntaxProblem, at: Int = index): Nothing =
+            throw SyntaxException(problem, at)
     }
 }

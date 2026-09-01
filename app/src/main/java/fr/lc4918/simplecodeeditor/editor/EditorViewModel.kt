@@ -16,11 +16,14 @@ import fr.lc4918.simplecodeeditor.format.CsvTransform
 import fr.lc4918.simplecodeeditor.format.DocumentFormatter
 import fr.lc4918.simplecodeeditor.format.JsonTransform
 import fr.lc4918.simplecodeeditor.format.JsonTree
+import fr.lc4918.simplecodeeditor.format.XmlTree
+import fr.lc4918.simplecodeeditor.format.diagnostic
 import fr.lc4918.simplecodeeditor.format.JsonWriter
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.CsvTable
+import fr.lc4918.simplecodeeditor.model.Diagnostic
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.TreeNode
@@ -33,10 +36,14 @@ import fr.lc4918.simplecodeeditor.model.ViewMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Holds the open document and the user settings for the editor screen. */
+@OptIn(kotlinx.coroutines.FlowPreview::class)
 class EditorViewModel(
     private val settings: SettingsRepository,
     private val documents: DocumentRepository,
@@ -66,6 +73,33 @@ class EditorViewModel(
             settings.csvDelimiter.collect { value ->
                 _uiState.update { it.copy(csvDelimiter = value) }
             }
+        }
+        // Reading the state rather than being told covers every way the
+        // document changes at once: typing, pasting, opening, renaming into
+        // another format, and the tools that rewrite it.
+        viewModelScope.launch {
+            uiState.map { it.document.content to it.format }
+                .distinctUntilChanged()
+                .debounce(VALIDATION_DELAY_MILLIS)
+                .collect { (content, format) ->
+                    val diagnostic = validate(content, format)
+                    _uiState.update { it.copy(diagnostic = diagnostic) }
+                }
+        }
+    }
+
+    /**
+     * What is wrong with the document, when anything is.
+     *
+     * A document with nothing in it yet is not wrong, only empty, so it is
+     * left alone rather than greeted with an error.
+     */
+    private fun validate(content: String, format: DocumentFormat): Diagnostic? {
+        if (content.isBlank()) return null
+        return when (format) {
+            DocumentFormat.JSON -> JsonTree.read(content).diagnostic
+            DocumentFormat.XML -> XmlTree.read(content).diagnostic
+            else -> null
         }
     }
 
@@ -381,6 +415,9 @@ class EditorViewModel(
     companion object {
         /** Keystrokes closer together than this share a single undo entry. */
         const val UNDO_COALESCE_MILLIS = 700L
+
+        /** Reading the whole document waits for the typing to pause. */
+        const val VALIDATION_DELAY_MILLIS = 300L
 
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {

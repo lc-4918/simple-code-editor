@@ -9,6 +9,7 @@ import { EditorView, drawSelection, highlightActiveLine, highlightActiveLineGutt
 import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { HighlightStyle, bracketMatching, codeFolding, foldAll, foldGutter, foldKeymap, indentOnInput, indentUnit, syntaxHighlighting, unfoldAll } from "@codemirror/language";
 import { closeSearchPanel, openSearchPanel, search, searchKeymap } from "@codemirror/search";
+import { lintGutter, setDiagnostics } from "@codemirror/lint";
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
@@ -151,6 +152,7 @@ const view = new EditorView({
             codeFolding(),
             foldGutter(),
             search({ top: true }),
+            lintGutter(),
             keymap.of([...defaultKeymap, ...searchKeymap, ...foldKeymap, indentWithTab]),
             languageConf.of([]),
             indentConf.of(indentUnit.of("  ")),
@@ -186,6 +188,27 @@ window.SimpleCodeEditor = {
 
     setColors(colors) {
         view.dispatch({ effects: themeConf.reconfigure(themeFor(colors)) });
+    },
+
+    /**
+     * Marks what is wrong with the document, or clears the mark.
+     *
+     * The reading is done on the Kotlin side, which knows the formats and
+     * says why in the language of the interface; only the place and the
+     * sentence travel here.
+     */
+    setDiagnostic(problem) {
+        const length = view.state.doc.length;
+        let diagnostics = [];
+        if (problem !== null && length > 0) {
+            // A place at the very end has nothing after it to underline, so
+            // the character before it is marked instead.
+            let from = Math.min(problem.offset, length);
+            let to = Math.min(from + 1, length);
+            if (from === to) from = Math.max(0, to - 1);
+            diagnostics = [{ from, to, severity: "error", message: problem.message }];
+        }
+        view.dispatch(setDiagnostics(view.state, diagnostics));
     },
 
     /** Labels of the search panel, translated on the Kotlin side. */

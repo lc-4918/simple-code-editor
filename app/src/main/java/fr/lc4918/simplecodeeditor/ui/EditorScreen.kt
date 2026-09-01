@@ -92,6 +92,7 @@ fun EditorScreen(
                 }
             },
         )
+        state.diagnostic?.let { diagnostic -> DiagnosticBar(diagnostic) }
         Box(modifier = Modifier.weight(1f)) {
             when (state.viewMode) {
                 ViewMode.TEXT -> CodeMirrorSurface(
@@ -99,6 +100,7 @@ fun EditorScreen(
                     format = state.format,
                     indentWidth = state.indentWidth,
                     isSearchVisible = state.isSearchVisible,
+                    diagnostic = state.diagnostic,
                     controller = editor,
                     onContentChanged = actions.onContentChanged,
                 )

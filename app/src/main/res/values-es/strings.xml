@@ -93,6 +93,24 @@
     <string name="search_replace_all">reemplazar todo</string>
     <string name="search_close">cerrar</string>
 
+    <!-- Why a document cannot be read -->
+    <string name="problem_end_of_document">El documento termina antes de estar completo</string>
+    <string name="problem_trailing_content">Hay contenido tras el final del documento</string>
+    <string name="problem_unexpected_character">Carácter inesperado</string>
+    <string name="problem_unterminated_string">Una cadena no se cierra nunca</string>
+    <string name="problem_expected_separator">Se esperaba una coma o un cierre</string>
+    <string name="problem_expected_colon">Se esperaban dos puntos tras la clave</string>
+    <string name="problem_expected_key">Se esperaba una clave</string>
+    <string name="problem_bad_number">Este número no se puede leer</string>
+    <string name="problem_bad_escape">Esta secuencia de escape no se puede leer</string>
+    <string name="problem_unknown_literal">Aquí solo se admiten true, false y null</string>
+    <string name="problem_unterminated_tag">Una etiqueta no se cierra nunca</string>
+    <string name="problem_unclosed_element">Un elemento no se cierra nunca</string>
+    <string name="problem_mismatched_closing_tag">Este cierre no corresponde al elemento que termina</string>
+    <string name="problem_unexpected_closing_tag">Un cierre sin elemento que cerrar</string>
+    <string name="problem_unterminated_markup">Un comentario o una declaración no se cierra nunca</string>
+    <string name="problem_position">Línea %1$d, columna %2$d</string>
+
     <!-- Common -->
     <string name="action_cancel">Cancelar</string>
     <string name="action_confirm">Aceptar</string>
