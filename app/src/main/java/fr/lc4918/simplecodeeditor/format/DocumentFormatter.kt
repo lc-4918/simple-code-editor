@@ -12,7 +12,8 @@ object DocumentFormatter {
 
     fun indent(content: String, format: DocumentFormat, width: Int): String = when (format) {
         DocumentFormat.JSON -> JsonFormatter.indent(content, width)
-        DocumentFormat.XML, DocumentFormat.HTML -> MarkupFormatter.indent(content, width)
+        DocumentFormat.XML -> MarkupFormatter.indent(content, width)
+        DocumentFormat.HTML -> MarkupFormatter.indent(content, width, html = true)
         DocumentFormat.CSS -> CodeFormatter.indent(content, CodeFormatter.Dialect.STYLE, width)
         DocumentFormat.JAVASCRIPT ->
             CodeFormatter.indent(content, CodeFormatter.Dialect.SCRIPT, width)
@@ -22,7 +23,8 @@ object DocumentFormatter {
 
     fun compact(content: String, format: DocumentFormat): String = when (format) {
         DocumentFormat.JSON -> JsonFormatter.compact(content)
-        DocumentFormat.XML, DocumentFormat.HTML -> MarkupFormatter.compact(content)
+        DocumentFormat.XML -> MarkupFormatter.compact(content)
+        DocumentFormat.HTML -> MarkupFormatter.compact(content, html = true)
         DocumentFormat.CSS -> CodeFormatter.compact(content, CodeFormatter.Dialect.STYLE)
         DocumentFormat.JAVASCRIPT -> CodeFormatter.compact(content, CodeFormatter.Dialect.SCRIPT)
         DocumentFormat.CSV, DocumentFormat.PLAIN_TEXT -> content

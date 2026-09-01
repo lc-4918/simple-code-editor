@@ -43,10 +43,19 @@ class XmlTreeTest {
     }
 
     @Test
-    fun `a void element looks for no closing tag`() {
-        val root = XmlTree.parse("<p><br><i>x</i></p>")!!
+    fun `a void element of HTML looks for no closing tag`() {
+        val root = XmlTree.parse("<p><br><i>x</i></p>", html = true)!!
 
         assertEquals(listOf("br", "i"), root.children.map { it.name })
+    }
+
+    @Test
+    fun `the same name in XML holds its content, as GPX writes it`() {
+        val root = XmlTree.parse("<gpx><link href=\"a\"><text>x</text></link></gpx>")!!
+        val link = root.children.single()
+
+        assertEquals("link", link.name)
+        assertEquals(listOf("@href", "text"), link.children.map { it.name })
     }
 
     @Test

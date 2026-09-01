@@ -10,7 +10,13 @@ package fr.lc4918.simplecodeeditor.format
  */
 object MarkupFormatter {
 
-    /** Elements that carry no content and therefore open no level. */
+    /**
+     * Elements HTML closes on their own behalf, which open no level.
+     *
+     * They belong to HTML and to nothing else: XML has no such list, and a
+     * document that uses one of these names for an ordinary element, which
+     * GPX does with link, would be laid out as if it had closed already.
+     */
     private val VOID_ELEMENTS = setOf(
         "area", "base", "br", "col", "embed", "hr", "img", "input",
         "link", "meta", "param", "source", "track", "wbr",
@@ -19,13 +25,14 @@ object MarkupFormatter {
     /** Elements whose content is copied over exactly as it is. */
     private val VERBATIM_ELEMENTS = setOf("pre", "textarea", "script", "style")
 
-    fun indent(content: String, width: Int): String =
-        rewrite(content, width, compact = false)
+    /** @param html whether the elements HTML closes on their own behalf apply */
+    fun indent(content: String, width: Int, html: Boolean = false): String =
+        rewrite(content, width, compact = false, html = html)
 
-    fun compact(content: String): String =
-        rewrite(content, width = 0, compact = true)
+    fun compact(content: String, html: Boolean = false): String =
+        rewrite(content, width = 0, compact = true, html = html)
 
-    private fun rewrite(content: String, width: Int, compact: Boolean): String {
+    private fun rewrite(content: String, width: Int, compact: Boolean, html: Boolean): String {
         val unit = " ".repeat(width)
         val out = StringBuilder(content.length)
         var depth = 0
@@ -61,7 +68,7 @@ object MarkupFormatter {
 
             val tagEnd = endOfTag(content, index) ?: return content
             val tag = content.substring(index, tagEnd + 1)
-            val kind = kindOf(tag)
+            val kind = kindOf(tag, html)
 
             if (kind == TagKind.CLOSING) depth = (depth - 1).coerceAtLeast(0)
             separate(depth)
@@ -91,11 +98,11 @@ object MarkupFormatter {
 
     private enum class TagKind { OPENING, CLOSING, SELF_CONTAINED }
 
-    private fun kindOf(tag: String): TagKind = when {
+    private fun kindOf(tag: String, html: Boolean): TagKind = when {
         tag.startsWith("</") -> TagKind.CLOSING
         tag.startsWith("<!") || tag.startsWith("<?") -> TagKind.SELF_CONTAINED
         tag.endsWith("/>") -> TagKind.SELF_CONTAINED
-        nameOf(tag) in VOID_ELEMENTS -> TagKind.SELF_CONTAINED
+        html && nameOf(tag) in VOID_ELEMENTS -> TagKind.SELF_CONTAINED
         else -> TagKind.OPENING
     }
 

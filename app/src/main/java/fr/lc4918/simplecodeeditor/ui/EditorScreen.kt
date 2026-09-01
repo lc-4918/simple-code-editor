@@ -95,9 +95,11 @@ fun EditorScreen(
         state.diagnostic?.let { diagnostic ->
             DiagnosticBar(
                 diagnostic = diagnostic,
-                // Repairing is the bundle's doing, so it is only offered where
-                // the bundle is on screen, and only for the format it knows.
-                onRepair = if (state.format == DocumentFormat.JSON &&
+                // Repairing rewrites a document until it reads, so it is only
+                // offered where the reading is what stopped, where the bundle
+                // that does it is on screen, and for the format it knows.
+                onRepair = if (diagnostic.problem.stopsTheReading &&
+                    state.format == DocumentFormat.JSON &&
                     state.viewMode == ViewMode.TEXT
                 ) {
                     { editor.repair(state.document.content, actions.onRepaired) }

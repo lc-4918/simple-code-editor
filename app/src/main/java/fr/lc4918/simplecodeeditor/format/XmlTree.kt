@@ -1,7 +1,7 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.NodeKind
-import fr.lc4918.simplecodeeditor.model.SyntaxProblem
+import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
 /**
@@ -16,7 +16,13 @@ import fr.lc4918.simplecodeeditor.model.TreeNode
  */
 object XmlTree {
 
-    /** Elements that hold nothing and therefore never look for a closing tag. */
+    /**
+     * Elements HTML closes on their own behalf.
+     *
+     * They belong to HTML and to nothing else: XML has no such list, and a
+     * document that uses one of these names for an ordinary element, which
+     * GPX does with link, would have it closed under its feet.
+     */
     private val VOID_ELEMENTS = setOf(
         "area", "base", "br", "col", "embed", "hr", "img", "input",
         "link", "meta", "param", "source", "track", "wbr",
@@ -24,17 +30,21 @@ object XmlTree {
 
     private const val ATTRIBUTE_PREFIX = "@"
 
-    /** The tree, or the first problem met and where. */
-    fun read(content: String): TreeReading {
-        val reader = Reader(content)
+    /**
+     * The tree, or the first problem met and where.
+     *
+     * @param html whether the elements HTML closes on their own behalf apply
+     */
+    fun read(content: String, html: Boolean = false): TreeReading {
+        val reader = Reader(content, html)
         return try {
             val roots = reader.readNodes(closingFor = null)
             when {
-                roots.isEmpty() -> throw SyntaxException(SyntaxProblem.END_OF_DOCUMENT, 0)
+                roots.isEmpty() -> throw SyntaxException(DocumentProblem.END_OF_DOCUMENT, 0)
                 roots.size == 1 -> TreeReading.Tree(roots.single())
                 // Several roots, which HTML fragments often have, hang under one.
                 else -> TreeReading.Tree(
-                    TreeNode(name = "", kind = NodeKind.ELEMENT, children = roots),
+                    TreeNode(name = "", kind = NodeKind.ELEMENT, children = roots, offset = 0),
                 )
             }
         } catch (problem: SyntaxException) {
@@ -44,9 +54,9 @@ object XmlTree {
         }
     }
 
-    fun parse(content: String): TreeNode? = read(content).root
+    fun parse(content: String, html: Boolean = false): TreeNode? = read(content, html).root
 
-    private class Reader(private val text: String) {
+    private class Reader(private val text: String, private val html: Boolean) {
         private var index = 0
 
         /**
@@ -63,9 +73,9 @@ object XmlTree {
                 if (text.startsWith("</", index)) {
                     val at = index
                     val name = closingTagName()
-                    if (closingFor == null) refuse(SyntaxProblem.UNEXPECTED_CLOSING_TAG, at)
+                    if (closingFor == null) refuse(DocumentProblem.UNEXPECTED_CLOSING_TAG, at)
                     if (!name.equals(closingFor, ignoreCase = true)) {
-                        refuse(SyntaxProblem.MISMATCHED_CLOSING_TAG, at)
+                        refuse(DocumentProblem.MISMATCHED_CLOSING_TAG, at)
                     }
                     return nodes
                 }
@@ -75,38 +85,42 @@ object XmlTree {
                 }
                 nodes.add(readElement())
             }
-            if (closingFor != null) refuse(SyntaxProblem.UNCLOSED_ELEMENT, text.length)
+            if (closingFor != null) refuse(DocumentProblem.UNCLOSED_ELEMENT, text.length)
             return nodes
         }
 
         private fun readText(): TreeNode? {
+            val at = index
             val end = text.indexOf('<', index).takeIf { it >= 0 } ?: text.length
             val raw = text.substring(index, end)
             index = end
             return raw.trim()
                 .takeIf { it.isNotEmpty() }
-                ?.let { TreeNode(name = "", kind = NodeKind.TEXT, value = it) }
+                ?.let { TreeNode(name = "", kind = NodeKind.TEXT, value = it, offset = at) }
         }
 
         private fun readElement(): TreeNode {
-            val end = endOfTag() ?: refuse(SyntaxProblem.UNTERMINATED_TAG, index)
+            val at = index
+            val end = endOfTag() ?: refuse(DocumentProblem.UNTERMINATED_TAG, index)
             val tag = text.substring(index, end + 1)
             index = end + 1
 
             val name = tagName(tag)
-            val attributes = attributesOf(tag)
-            val selfContained = tag.endsWith("/>") || name.lowercase() in VOID_ELEMENTS
+            val attributes = attributesOf(tag, at)
+            val selfContained =
+                tag.endsWith("/>") || (html && name.lowercase() in VOID_ELEMENTS)
             val children = if (selfContained) emptyList() else readNodes(closingFor = name)
 
             return TreeNode(
                 name = name,
                 kind = NodeKind.ELEMENT,
                 children = attributes + children,
+                offset = at,
             )
         }
 
         private fun closingTagName(): String {
-            val end = endOfTag() ?: refuse(SyntaxProblem.UNTERMINATED_TAG, index)
+            val end = endOfTag() ?: refuse(DocumentProblem.UNTERMINATED_TAG, index)
             val name = text.substring(index + 2, end).trim()
             index = end + 1
             return name
@@ -119,12 +133,12 @@ object XmlTree {
             listOf("<!--" to "-->", "<![CDATA[" to "]]>").forEach { (opening, closing) ->
                 if (text.startsWith(opening, index)) {
                     val end = text.indexOf(closing, index + opening.length)
-                    if (end < 0) refuse(SyntaxProblem.UNTERMINATED_MARKUP, index)
+                    if (end < 0) refuse(DocumentProblem.UNTERMINATED_MARKUP, index)
                     index = end + closing.length
                     return
                 }
             }
-            val end = endOfTag() ?: refuse(SyntaxProblem.UNTERMINATED_MARKUP, index)
+            val end = endOfTag() ?: refuse(DocumentProblem.UNTERMINATED_MARKUP, index)
             index = end + 1
         }
 
@@ -144,14 +158,14 @@ object XmlTree {
             return null
         }
 
-        private fun refuse(problem: SyntaxProblem, at: Int): Nothing =
+        private fun refuse(problem: DocumentProblem, at: Int): Nothing =
             throw SyntaxException(problem, at)
     }
 
     private fun tagName(tag: String): String =
         tag.trimStart('<').takeWhile { !it.isWhitespace() && it != '>' && it != '/' }
 
-    private fun attributesOf(tag: String): List<TreeNode> {
+    private fun attributesOf(tag: String, at: Int): List<TreeNode> {
         val body = tag.trim('<', '>', '/').substringAfter(tagName(tag), missingDelimiterValue = "")
         return Regex("""([\w:.-]+)\s*=\s*("([^"]*)"|'([^']*)')""")
             .findAll(body)
@@ -160,6 +174,7 @@ object XmlTree {
                     name = ATTRIBUTE_PREFIX + match.groupValues[1],
                     kind = NodeKind.ATTRIBUTE,
                     value = match.groupValues[3].ifEmpty { match.groupValues[4] },
+                    offset = at,
                 )
             }
             .toList()

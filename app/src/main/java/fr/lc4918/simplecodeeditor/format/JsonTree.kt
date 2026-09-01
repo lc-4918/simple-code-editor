@@ -1,7 +1,7 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.NodeKind
-import fr.lc4918.simplecodeeditor.model.SyntaxProblem
+import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
 /**
@@ -21,7 +21,7 @@ object JsonTree {
             reader.skipWhitespace()
             val root = reader.readValue(name = "")
             reader.skipWhitespace()
-            if (!reader.atEnd) reader.refuse(SyntaxProblem.TRAILING_CONTENT)
+            if (!reader.atEnd) reader.refuse(DocumentProblem.TRAILING_CONTENT)
             TreeReading.Tree(root)
         } catch (problem: SyntaxException) {
             TreeReading.Refused(
@@ -43,28 +43,31 @@ object JsonTree {
 
         fun readValue(name: String): TreeNode {
             skipWhitespace()
+            val at = index
             return when (val character = peek()) {
-                '{' -> readObject(name)
-                '[' -> readArray(name)
-                '"' -> TreeNode(name, NodeKind.STRING, value = readString())
-                't', 'f' -> TreeNode(name, NodeKind.BOOLEAN, value = readLiteral("true", "false"))
-                'n' -> TreeNode(name, NodeKind.NULL, value = readLiteral("null"))
+                '{' -> readObject(name, at)
+                '[' -> readArray(name, at)
+                '"' -> TreeNode(name, NodeKind.STRING, readString(), offset = at)
+                't', 'f' ->
+                    TreeNode(name, NodeKind.BOOLEAN, readLiteral("true", "false"), offset = at)
+
+                'n' -> TreeNode(name, NodeKind.NULL, readLiteral("null"), offset = at)
                 else ->
                     if (character == '-' || character.isDigit()) {
-                        TreeNode(name, NodeKind.NUMBER, value = readNumber())
+                        TreeNode(name, NodeKind.NUMBER, readNumber(), offset = at)
                     } else {
-                        refuse(SyntaxProblem.UNEXPECTED_CHARACTER)
+                        refuse(DocumentProblem.UNEXPECTED_CHARACTER)
                     }
             }
         }
 
-        private fun readObject(name: String): TreeNode {
+        private fun readObject(name: String, at: Int): TreeNode {
             expect('{')
             val children = mutableListOf<TreeNode>()
             skipWhitespace()
             if (peek() == '}') {
                 index++
-                return TreeNode(name, NodeKind.OBJECT, children = children)
+                return TreeNode(name, NodeKind.OBJECT, children = children, offset = at)
             }
             while (true) {
                 skipWhitespace()
@@ -77,21 +80,21 @@ object JsonTree {
                     ',' -> index++
                     '}' -> {
                         index++
-                        return TreeNode(name, NodeKind.OBJECT, children = children)
+                        return TreeNode(name, NodeKind.OBJECT, children = children, offset = at)
                     }
 
-                    else -> refuse(SyntaxProblem.EXPECTED_SEPARATOR)
+                    else -> refuse(DocumentProblem.EXPECTED_SEPARATOR)
                 }
             }
         }
 
-        private fun readArray(name: String): TreeNode {
+        private fun readArray(name: String, at: Int): TreeNode {
             expect('[')
             val children = mutableListOf<TreeNode>()
             skipWhitespace()
             if (peek() == ']') {
                 index++
-                return TreeNode(name, NodeKind.ARRAY, children = children)
+                return TreeNode(name, NodeKind.ARRAY, children = children, offset = at)
             }
             while (true) {
                 children.add(readValue(children.size.toString()))
@@ -100,10 +103,10 @@ object JsonTree {
                     ',' -> index++
                     ']' -> {
                         index++
-                        return TreeNode(name, NodeKind.ARRAY, children = children)
+                        return TreeNode(name, NodeKind.ARRAY, children = children, offset = at)
                     }
 
-                    else -> refuse(SyntaxProblem.EXPECTED_SEPARATOR)
+                    else -> refuse(DocumentProblem.EXPECTED_SEPARATOR)
                 }
             }
         }
@@ -131,7 +134,7 @@ object JsonTree {
                     }
                 }
             }
-            refuse(SyntaxProblem.UNTERMINATED_STRING, at = start)
+            refuse(DocumentProblem.UNTERMINATED_STRING, at = start)
         }
 
         private fun readEscape(): Char {
@@ -147,14 +150,14 @@ object JsonTree {
                 'r' -> '\r'
                 't' -> '\t'
                 'u' -> {
-                    if (index + 4 > text.length) refuse(SyntaxProblem.BAD_ESCAPE)
+                    if (index + 4 > text.length) refuse(DocumentProblem.BAD_ESCAPE)
                     val code = text.substring(index, index + 4).toIntOrNull(16)
-                        ?: refuse(SyntaxProblem.BAD_ESCAPE)
+                        ?: refuse(DocumentProblem.BAD_ESCAPE)
                     index += 4
                     code.toChar()
                 }
 
-                else -> refuse(SyntaxProblem.BAD_ESCAPE)
+                else -> refuse(DocumentProblem.BAD_ESCAPE)
             }
         }
 
@@ -163,7 +166,7 @@ object JsonTree {
             if (peek() == '-') index++
             while (index < text.length && (text[index].isDigit() || text[index] in ".eE+-")) index++
             val number = text.substring(start, index)
-            if (number.toDoubleOrNull() == null) refuse(SyntaxProblem.BAD_NUMBER, at = start)
+            if (number.toDoubleOrNull() == null) refuse(DocumentProblem.BAD_NUMBER, at = start)
             return number
         }
 
@@ -174,23 +177,23 @@ object JsonTree {
                     return option
                 }
             }
-            refuse(SyntaxProblem.UNKNOWN_LITERAL)
+            refuse(DocumentProblem.UNKNOWN_LITERAL)
         }
 
         private fun peek(): Char =
-            if (index < text.length) text[index] else refuse(SyntaxProblem.END_OF_DOCUMENT)
+            if (index < text.length) text[index] else refuse(DocumentProblem.END_OF_DOCUMENT)
 
         private fun expect(character: Char) {
             val expected = when (character) {
-                ':' -> SyntaxProblem.EXPECTED_COLON
-                '"' -> SyntaxProblem.EXPECTED_KEY
-                else -> SyntaxProblem.EXPECTED_SEPARATOR
+                ':' -> DocumentProblem.EXPECTED_COLON
+                '"' -> DocumentProblem.EXPECTED_KEY
+                else -> DocumentProblem.EXPECTED_SEPARATOR
             }
             if (peek() != character) refuse(expected)
             index++
         }
 
-        fun refuse(problem: SyntaxProblem, at: Int = index): Nothing =
+        fun refuse(problem: DocumentProblem, at: Int = index): Nothing =
             throw SyntaxException(problem, at)
     }
 }

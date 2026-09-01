@@ -1,12 +1,12 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.Diagnostic
-import fr.lc4918.simplecodeeditor.model.SyntaxProblem
+import fr.lc4918.simplecodeeditor.model.DocumentProblem
 
 /** Turns a place in the text into the line and column a reader can look for. */
 object TextPosition {
 
-    fun diagnosticAt(content: String, problem: SyntaxProblem, offset: Int): Diagnostic {
+    fun diagnosticAt(content: String, problem: DocumentProblem, offset: Int): Diagnostic {
         val safeOffset = offset.coerceIn(0, content.length)
         var line = 1
         var lineStart = 0

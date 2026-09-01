@@ -1,7 +1,7 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.Diagnostic
-import fr.lc4918.simplecodeeditor.model.SyntaxProblem
+import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
 /** What reading a document gave: a tree, or the reason there is none. */
@@ -27,6 +27,6 @@ val TreeReading.diagnostic: Diagnostic?
  * the language of the interface and the surface can point at the character.
  */
 internal class SyntaxException(
-    val problem: SyntaxProblem,
+    val problem: DocumentProblem,
     val offset: Int,
 ) : Exception()

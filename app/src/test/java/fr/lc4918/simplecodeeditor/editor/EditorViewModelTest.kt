@@ -6,10 +6,10 @@ import fr.lc4918.simplecodeeditor.fake.FakeSettingsRepository
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
+import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FilterOperator
-import fr.lc4918.simplecodeeditor.model.SyntaxProblem
 import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
@@ -341,7 +341,7 @@ class EditorViewModelTest {
             dispatcher.scheduler.advanceUntilIdle()
 
             val diagnostic = model.uiState.value.diagnostic!!
-            assertEquals(SyntaxProblem.UNEXPECTED_CHARACTER, diagnostic.problem)
+            assertEquals(DocumentProblem.UNEXPECTED_CHARACTER, diagnostic.problem)
             assertEquals(1, diagnostic.line)
         }
 
@@ -436,6 +436,55 @@ class EditorViewModelTest {
 
         assertEquals(R.string.error_repair, model.uiState.value.statusMessageRes)
     }
+
+    @Test
+    fun `a document that reads as JSON can still break the rules of GeoJSON`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            model.setDocument(
+                EditorDocument.empty(DocumentFormat.JSON).copy(
+                    name = "export.geojson",
+                    content = """{"type":"Point","coordinates":[999,0]}""",
+                ),
+            )
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(
+                DocumentProblem.LONGITUDE_OUT_OF_RANGE,
+                model.uiState.value.diagnostic?.problem,
+            )
+        }
+
+    @Test
+    fun `the same document is left alone when nothing says it is GeoJSON`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            model.setDocument(
+                EditorDocument.empty(DocumentFormat.JSON).copy(
+                    name = "numbers",
+                    content = """{"kind":"Point","coordinates":[999,0]}""",
+                ),
+            )
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(null, model.uiState.value.diagnostic)
+        }
+
+    @Test
+    fun `a track is checked against the shape of GPX once it reads as XML`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            model.setDocument(
+                EditorDocument.empty(DocumentFormat.XML)
+                    .copy(content = """<gpx><trkpt lat="45.76"/></gpx>"""),
+            )
+            dispatcher.scheduler.advanceUntilIdle()
+
+            assertEquals(
+                DocumentProblem.COORDINATE_MISSING,
+                model.uiState.value.diagnostic?.problem,
+            )
+        }
 
     @Test
     fun `theme changes are persisted and reflected in the state`() = runTest(dispatcher) {

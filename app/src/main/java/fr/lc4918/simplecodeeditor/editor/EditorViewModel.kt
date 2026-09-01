@@ -14,14 +14,20 @@ import fr.lc4918.simplecodeeditor.data.SettingsRepository
 import fr.lc4918.simplecodeeditor.format.CsvParser
 import fr.lc4918.simplecodeeditor.format.CsvTransform
 import fr.lc4918.simplecodeeditor.format.DocumentFormatter
+import fr.lc4918.simplecodeeditor.format.DerivedFormatDetector
+import fr.lc4918.simplecodeeditor.format.GeoJsonValidator
+import fr.lc4918.simplecodeeditor.format.GpxValidator
 import fr.lc4918.simplecodeeditor.format.JsonTransform
+import fr.lc4918.simplecodeeditor.format.KmlValidator
 import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.format.XmlTree
 import fr.lc4918.simplecodeeditor.format.diagnostic
+import fr.lc4918.simplecodeeditor.format.root
 import fr.lc4918.simplecodeeditor.format.JsonWriter
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
+import fr.lc4918.simplecodeeditor.model.DerivedFormat
 import fr.lc4918.simplecodeeditor.model.CsvTable
 import fr.lc4918.simplecodeeditor.model.Diagnostic
 import fr.lc4918.simplecodeeditor.model.FilterOperator
@@ -78,11 +84,11 @@ class EditorViewModel(
         // document changes at once: typing, pasting, opening, renaming into
         // another format, and the tools that rewrite it.
         viewModelScope.launch {
-            uiState.map { it.document.content to it.format }
+            uiState.map { Triple(it.document.content, it.format, it.document.name) }
                 .distinctUntilChanged()
                 .debounce(VALIDATION_DELAY_MILLIS)
-                .collect { (content, format) ->
-                    val diagnostic = validate(content, format)
+                .collect { (content, format, name) ->
+                    val diagnostic = validate(content, format, name)
                     _uiState.update { it.copy(diagnostic = diagnostic) }
                 }
         }
@@ -94,12 +100,25 @@ class EditorViewModel(
      * A document with nothing in it yet is not wrong, only empty, so it is
      * left alone rather than greeted with an error.
      */
-    private fun validate(content: String, format: DocumentFormat): Diagnostic? {
+    private fun validate(content: String, format: DocumentFormat, name: String): Diagnostic? {
         if (content.isBlank()) return null
-        return when (format) {
-            DocumentFormat.JSON -> JsonTree.read(content).diagnostic
-            DocumentFormat.XML -> XmlTree.read(content).diagnostic
-            else -> null
+        val reading = when (format) {
+            DocumentFormat.JSON -> JsonTree.read(content)
+            DocumentFormat.XML -> XmlTree.read(content)
+            else -> return null
+        }
+        reading.diagnostic?.let { return it }
+        val root = reading.root ?: return null
+
+        // The grammar holds. A document written for one of the formats built
+        // on it has a second set of rules to answer to, which a document that
+        // reads perfectly well can still break.
+        val derived = DerivedFormatDetector.detect(name, content)?.takeIf { it.base == format }
+        return when (derived) {
+            DerivedFormat.GEOJSON -> GeoJsonValidator.validate(content, root)
+            DerivedFormat.GPX -> GpxValidator.validate(content, root)
+            DerivedFormat.KML -> KmlValidator.validate(content, root)
+            null -> null
         }
     }
 

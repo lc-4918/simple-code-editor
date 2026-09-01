@@ -118,6 +118,17 @@
     <string name="problem_mismatched_closing_tag">This closing tag does not match the element it ends</string>
     <string name="problem_unexpected_closing_tag">A closing tag with no element to close</string>
     <string name="problem_unterminated_markup">A comment or a declaration is never closed</string>
+        <string name="problem_geojson_unknown_type">This is not one of the types GeoJSON defines</string>
+    <string name="problem_geojson_missing_member">A member this type requires is missing</string>
+    <string name="problem_geojson_bad_position">A position takes two or three numbers</string>
+    <string name="problem_geojson_coordinates_shape">The coordinates do not have the shape this geometry takes</string>
+    <string name="problem_geojson_short_line">A line takes at least two positions</string>
+    <string name="problem_geojson_ring_not_closed">A ring takes at least four positions and ends where it starts</string>
+    <string name="problem_root_element_unexpected">The document does not open with the element this format takes</string>
+    <string name="problem_coordinate_missing">A point without its latitude or its longitude</string>
+    <string name="problem_coordinate_not_a_number">This coordinate is not a number</string>
+    <string name="problem_longitude_out_of_range">A longitude runs from -180 to 180</string>
+    <string name="problem_latitude_out_of_range">A latitude runs from -90 to 90</string>
     <string name="problem_position">Line %1$d, column %2$d</string>
 
     <!-- Common -->

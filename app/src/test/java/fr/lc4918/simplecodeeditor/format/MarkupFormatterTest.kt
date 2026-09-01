@@ -31,8 +31,9 @@ class MarkupFormatterTest {
     }
 
     @Test
-    fun `a void element opens no level`() {
-        val formatted = MarkupFormatter.indent("<p><br><img src=\"a.png\"></p>", width = 2)
+    fun `a void element of HTML opens no level`() {
+        val formatted =
+            MarkupFormatter.indent("<p><br><img src=\"a.png\"></p>", width = 2, html = true)
 
         assertEquals("<p>\n  <br>\n  <img src=\"a.png\">\n</p>", formatted)
     }
@@ -57,6 +58,16 @@ class MarkupFormatterTest {
         val formatted = MarkupFormatter.indent(source, width = 2)
 
         assertEquals("<div>\n  <pre>  kept\n   as is</pre>\n</div>", formatted)
+    }
+
+    @Test
+    fun `the same name in XML is an ordinary element`() {
+        val formatted = MarkupFormatter.indent("<gpx><link href=\"a\"><text>x</text></link></gpx>", width = 2)
+
+        assertEquals(
+            "<gpx>\n  <link href=\"a\">\n    <text>\n      x\n    </text>\n  </link>\n</gpx>",
+            formatted,
+        )
     }
 
     @Test

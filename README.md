@@ -94,6 +94,34 @@ the way to compare the two.
 XML is read the same way but not repaired, there being no equivalent to lean
 on.
 
+## Formats built on JSON and XML
+
+A GeoJSON, GPX or KML document can be perfect JSON or XML and still be a bad
+one of those, so reading it is not the end of the checking. The format is
+recognised by the file name, and by the content when the name says nothing: the
+two types only a GeoJSON carries at its root, and the element a GPX or a KML
+opens with, namespace or not.
+
+**GeoJSON** is checked against RFC 7946 on the points a reader can judge
+without knowing what the data means: the nine types, the members each requires,
+the shape of the coordinates each geometry takes, the two or three numbers of a
+position and the bounds they lie within, the two positions a line takes, and
+the four a ring takes and its closing where it started. Left out on purpose,
+since a document that breaks them is still usable and a reader cannot tell
+intent from mistake: the winding order of the rings, the crossing of the
+antimeridian, and the bounding box.
+
+**GPX and KML are not validated against their schema.** Android carries no
+implementation of W3C XML Schema: asking for one throws, so the official XSD
+cannot be applied without bringing a parser along. What is checked instead is
+the part of each format that carries the data and that a wrong file gets wrong:
+the opening element, and the coordinates, which GPX writes as attributes of its
+points and KML as the text of an element. The order of the elements, and the
+ones the schema forbids, go unchecked.
+
+Only the first broken rule is reported, as with the readers, and a rule of a
+format is not something repairing could address: the document already reads.
+
 ## Settings
 
 - Interface language: English by default, French and Spanish available.
