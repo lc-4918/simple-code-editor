@@ -13,6 +13,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ModalBottomSheet
@@ -20,6 +25,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -73,18 +82,6 @@ fun SettingsSheet(
                 text = stringResource(R.string.action_settings),
                 style = MaterialTheme.typography.titleLarge,
             )
-            OptionSection(
-                title = stringResource(R.string.settings_theme),
-                options = ThemeOption.entries,
-                selected = theme,
-                onSelected = onThemeSelected,
-            )
-            OptionSection(
-                title = stringResource(R.string.settings_language),
-                options = AppLanguage.entries,
-                selected = language,
-                onSelected = onLanguageSelected,
-            )
             IndentSection(
                 selected = indentWidth,
                 onSelected = onIndentWidthSelected,
@@ -95,6 +92,24 @@ fun SettingsSheet(
                 selected = csvDelimiter,
                 onSelected = onCsvDelimiterSelected,
             )
+            // Two short lists that each hold one answer, so they are picked
+            // from rather than laid out, and they share a line.
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OptionDropdown(
+                    label = stringResource(R.string.settings_language),
+                    options = AppLanguage.entries,
+                    selected = language,
+                    onSelected = onLanguageSelected,
+                    modifier = Modifier.weight(1f),
+                )
+                OptionDropdown(
+                    label = stringResource(R.string.settings_theme),
+                    options = ThemeOption.entries,
+                    selected = theme,
+                    onSelected = onThemeSelected,
+                    modifier = Modifier.weight(1f),
+                )
+            }
             OptionSection(
                 title = stringResource(R.string.settings_updates),
                 options = UpdateMode.entries,
@@ -111,6 +126,48 @@ fun SettingsSheet(
                 Text(
                     text = stringResource(messageRes),
                     style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}
+
+/** One of a short list, picked from a menu rather than laid out in a row. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T : LabelledOption> OptionDropdown(
+    label: String,
+    options: List<T>,
+    selected: T,
+    onSelected: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
+    ) {
+        OutlinedTextField(
+            value = stringResource(selected.labelRes),
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth(),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(option.labelRes)) },
+                    onClick = {
+                        expanded = false
+                        onSelected(option)
+                    },
                 )
             }
         }
