@@ -22,6 +22,7 @@ import fr.lc4918.simplecodeeditor.format.KmlValidator
 import fr.lc4918.simplecodeeditor.format.TreeEdit
 import fr.lc4918.simplecodeeditor.format.TreeStructure
 import fr.lc4918.simplecodeeditor.format.JsonTree
+import fr.lc4918.simplecodeeditor.format.XmlRepairer
 import fr.lc4918.simplecodeeditor.format.XmlTree
 import fr.lc4918.simplecodeeditor.format.diagnostic
 import fr.lc4918.simplecodeeditor.format.root
@@ -450,6 +451,18 @@ class EditorViewModel(
         }
         rewrite { repaired }
         setStatus(R.string.status_repaired)
+    }
+
+    /**
+     * Makes a broken XML document readable again, as far as guessing allows.
+     *
+     * Unlike the JSON one this needs nothing on screen to do it, so it is
+     * offered wherever the report is.
+     */
+    fun repairXml() {
+        val state = _uiState.value
+        if (state.format != DocumentFormat.XML) return
+        applyRepair(XmlRepairer.repair(state.document.content))
     }
 
     /** Reports that the document has just been put on the clipboard. */

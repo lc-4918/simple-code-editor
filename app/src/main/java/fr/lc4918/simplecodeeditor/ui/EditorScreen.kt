@@ -96,15 +96,16 @@ fun EditorScreen(
             DiagnosticBar(
                 diagnostic = diagnostic,
                 // Repairing rewrites a document until it reads, so it is only
-                // offered where the reading is what stopped, where the bundle
-                // that does it is on screen, and for the format it knows.
-                onRepair = if (diagnostic.problem.stopsTheReading &&
-                    state.format == DocumentFormat.JSON &&
-                    state.viewMode == ViewMode.TEXT
-                ) {
-                    { editor.repair(state.document.content, actions.onRepaired) }
-                } else {
-                    null
+                // offered where the reading is what stopped. The JSON one is
+                // the bundle's doing and needs it on screen; the XML one is
+                // ours and needs nothing.
+                onRepair = when {
+                    !diagnostic.problem.stopsTheReading -> null
+                    state.format == DocumentFormat.JSON && state.viewMode == ViewMode.TEXT ->
+                        { -> editor.repair(state.document.content, actions.onRepaired) }
+
+                    state.format == DocumentFormat.XML -> actions.onRepairXml
+                    else -> null
                 },
             )
         }

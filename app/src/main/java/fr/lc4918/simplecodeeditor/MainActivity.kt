@@ -149,6 +149,7 @@ class MainActivity : AppCompatActivity() {
                     onViewModeSelected = viewModel::setViewMode,
                     onTool = viewModel::onTool,
                     onRepaired = viewModel::applyRepair,
+                    onRepairXml = viewModel::repairXml,
                     onTreeNameTyped = viewModel::onTreeNameTyped,
                     onTreeValueTyped = viewModel::onTreeValueTyped,
                     // Cutting, copying and pasting go through the clipboard of

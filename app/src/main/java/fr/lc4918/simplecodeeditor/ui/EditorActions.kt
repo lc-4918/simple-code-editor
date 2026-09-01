@@ -32,6 +32,7 @@ class EditorActions(
     val onViewModeSelected: (ViewMode) -> Unit,
     val onTool: (EditorTool) -> Unit,
     val onRepaired: (String?) -> Unit,
+    val onRepairXml: () -> Unit,
     val onTreeNameTyped: (TreeNode, String) -> Unit,
     val onTreeValueTyped: (TreeNode, String) -> Unit,
     val onTreeAction: (TreeNode, TreeAction) -> Unit,

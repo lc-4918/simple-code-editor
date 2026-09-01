@@ -116,8 +116,21 @@ is one step in the history: one undo brings the broken document back.
 What is repaired is not shown side by side with what it replaced. Undoing is
 the way to compare the two.
 
-XML is read the same way but not repaired, there being no equivalent to lean
-on.
+XML is repaired too, by rules written here rather than by a library: there is
+no jsonrepair for XML to lean on. It covers the faults that turn up in files
+rather than every fault there is: an ampersand that opens no entity, a bare
+less than sign in text, an attribute whose value lost its quotes, a closing tag
+that closes the wrong element or nothing at all, and elements left open at the
+end. An ampersand that already opens an entity is left alone, and comments and
+character data come through untouched.
+
+It will not write in an XML declaration where there is none. A document without
+one is well formed, so there is nothing there to repair, and adding one would
+change the file rather than fix it.
+
+The XML repair needs nothing on screen, so it is offered wherever the report
+is, and what it produces is read again: the reading is what says whether the
+guess worked.
 
 ## Formats built on JSON and XML
 
