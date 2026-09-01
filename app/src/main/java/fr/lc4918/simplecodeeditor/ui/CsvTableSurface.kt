@@ -57,12 +57,13 @@ private val ROW_HEIGHT = 44.dp
 @Composable
 fun CsvTableSurface(
     content: String,
+    fallbackDelimiter: Char,
     onCellChanged: (row: Int, column: Int, value: String) -> Unit,
     onAddRow: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEditorColors.current
-    val table = remember(content) { CsvParser.parse(content) }
+    val table = remember(content, fallbackDelimiter) { CsvParser.parse(content, fallbackDelimiter) }
 
     if (table == null) {
         Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

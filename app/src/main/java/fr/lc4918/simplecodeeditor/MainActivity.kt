@@ -2,6 +2,8 @@ package fr.lc4918.simplecodeeditor
 
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +17,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,10 +41,21 @@ import fr.lc4918.simplecodeeditor.ui.EditorScreen
 import fr.lc4918.simplecodeeditor.ui.NewDocument
 import fr.lc4918.simplecodeeditor.ui.OpenEditableDocument
 import fr.lc4918.simplecodeeditor.ui.theme.SimpleCodeEditorTheme
+import fr.lc4918.simplecodeeditor.ui.theme.isDarkTheme
 
 class MainActivity : AppCompatActivity() {
+
+    /**
+     * Document handed over by a file browser, waiting to be read.
+     *
+     * It is only taken from a fresh start: on a recreation the same intent is
+     * handed back, and reading it again would throw away what was edited.
+     */
+    private val pendingDocument = mutableStateOf<Uri?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) pendingDocument.value = intent.documentUri()
         enableEdgeToEdge()
         setContent {
             val viewModel: EditorViewModel = viewModel(factory = EditorViewModel.Factory)
@@ -56,8 +70,24 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
+            LaunchedEffect(pendingDocument.value) {
+                pendingDocument.value?.let { uri ->
+                    viewModel.open(DocumentLocation(uri.toString()))
+                    pendingDocument.value = null
+                }
+            }
+
             LaunchedEffect(state.isFullScreen) {
                 setSystemBarsVisible(!state.isFullScreen)
+            }
+
+            // The system bars sit over the application, not over the system,
+            // so their icons have to follow the theme chosen here. Without
+            // this a light application under a dark system draws white icons
+            // on its own pale background, where nothing shows.
+            val darkTheme = isDarkTheme(state.theme)
+            LaunchedEffect(darkTheme) {
+                setLightSystemBars(!darkTheme)
             }
 
             val openLauncher = rememberLauncherForActivityResult(
@@ -128,6 +158,7 @@ class MainActivity : AppCompatActivity() {
                     onThemeSelected = viewModel::setTheme,
                     onLanguageSelected = viewModel::setLanguage,
                     onIndentWidthSelected = viewModel::setIndentWidth,
+                    onCsvDelimiterSelected = viewModel::setCsvDelimiter,
                 )
             }
 
@@ -151,6 +182,20 @@ class MainActivity : AppCompatActivity() {
         clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
     }
 
+    /** A second document opened while the editor was already running. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingDocument.value = intent.documentUri()
+    }
+
+    /** Dark icons in the system bars over a light application, and the reverse. */
+    private fun setLightSystemBars(light: Boolean) {
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.isAppearanceLightStatusBars = light
+        controller.isAppearanceLightNavigationBars = light
+    }
+
     /** Hides the status and navigation bars while the editor is in full screen. */
     private fun setSystemBarsVisible(visible: Boolean) {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
@@ -163,6 +208,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+/** The document a browser is asking to open, when that is what the intent says. */
+private fun Intent.documentUri(): Uri? =
+    data.takeIf { action == Intent.ACTION_VIEW || action == Intent.ACTION_EDIT }
 
 /** The document in the shape the chosen copy variant asks for. */
 private fun EditorUiState.copyText(variant: CopyVariant): String = when (variant) {

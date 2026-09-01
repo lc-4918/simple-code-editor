@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import fr.lc4918.simplecodeeditor.model.AppLanguage
+import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -31,6 +32,11 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         preferences[KEY_INDENT_WIDTH] ?: SettingsRepository.DEFAULT_INDENT_WIDTH
     }
 
+    override val csvDelimiter: Flow<CsvDelimiter> =
+        context.settingsDataStore.data.map { preferences ->
+            CsvDelimiter.fromStorageKey(preferences[KEY_CSV_DELIMITER])
+        }
+
     override suspend fun setTheme(option: ThemeOption) {
         context.settingsDataStore.edit { it[KEY_THEME] = option.storageKey }
     }
@@ -48,9 +54,14 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         }
     }
 
+    override suspend fun setCsvDelimiter(delimiter: CsvDelimiter) {
+        context.settingsDataStore.edit { it[KEY_CSV_DELIMITER] = delimiter.storageKey }
+    }
+
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_INDENT_WIDTH = intPreferencesKey("indent_width")
+        val KEY_CSV_DELIMITER = stringPreferencesKey("csv_delimiter")
     }
 }

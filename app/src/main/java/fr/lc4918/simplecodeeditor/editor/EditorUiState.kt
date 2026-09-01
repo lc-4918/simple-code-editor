@@ -3,6 +3,7 @@ package fr.lc4918.simplecodeeditor.editor
 import androidx.annotation.StringRes
 import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.model.AppLanguage
+import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FormatCapabilities
@@ -25,6 +26,7 @@ data class EditorUiState(
      */
     val isLanguageLoaded: Boolean = false,
     val indentWidth: Int = SettingsRepository.DEFAULT_INDENT_WIDTH,
+    val csvDelimiter: CsvDelimiter = CsvDelimiter.DEFAULT,
     val isFullScreen: Boolean = false,
     val isSearchVisible: Boolean = false,
     val searchQuery: String = "",

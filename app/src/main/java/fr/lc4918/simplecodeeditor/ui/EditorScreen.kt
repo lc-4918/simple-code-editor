@@ -107,6 +107,7 @@ fun EditorScreen(
 
                 ViewMode.TABLE -> CsvTableSurface(
                     content = state.document.content,
+                    fallbackDelimiter = state.csvDelimiter.character,
                     onCellChanged = actions.onCellChanged,
                     onAddRow = actions.onAddRow,
                 )
@@ -166,9 +167,11 @@ fun EditorScreen(
             theme = state.theme,
             language = state.language,
             indentWidth = state.indentWidth,
+            csvDelimiter = state.csvDelimiter,
             onThemeSelected = actions.onThemeSelected,
             onLanguageSelected = actions.onLanguageSelected,
             onIndentWidthSelected = actions.onIndentWidthSelected,
+            onCsvDelimiterSelected = actions.onCsvDelimiterSelected,
             onDismiss = { settingsVisible = false },
         )
     }
@@ -189,8 +192,8 @@ private fun fieldNames(state: EditorUiState, valueLabel: String): List<String> =
     remember(state.format, state.document.content, valueLabel) {
         val content = state.document.content
         when (state.format) {
-            DocumentFormat.CSV ->
-                CsvParser.parse(content)?.let { table -> List(table.columnCount, table::columnName) }
+            DocumentFormat.CSV -> CsvParser.parse(content, state.csvDelimiter.character)
+                ?.let { table -> List(table.columnCount, table::columnName) }
 
             DocumentFormat.JSON -> JsonTree.parse(content)?.let(JsonTransform::fields)
             else -> null

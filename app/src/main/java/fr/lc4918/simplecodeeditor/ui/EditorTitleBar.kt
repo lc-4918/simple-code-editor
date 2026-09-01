@@ -1,20 +1,17 @@
 package fr.lc4918.simplecodeeditor.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
@@ -35,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -122,6 +121,10 @@ fun EditorTitleBar(
 /**
  * Editable document name.
  *
+ * The name is the field, with nothing beside it: tapping the name is what
+ * starts editing, so a pencil next to it would only take room away from the
+ * name itself, which is given every point the actions leave.
+ *
  * The typed value is kept locally and only handed over when the field loses the
  * focus or the keyboard action is confirmed, because the view model normalises
  * the name and would otherwise fight every keystroke.
@@ -134,44 +137,32 @@ private fun DocumentNameField(
 ) {
     val colors = LocalEditorColors.current
     val focusManager = LocalFocusManager.current
+    val label = stringResource(R.string.document_name)
     var text by remember(name) { mutableStateOf(name) }
     var wasFocused by remember { mutableStateOf(false) }
 
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        BasicTextField(
-            value = text,
-            onValueChange = { text = it },
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .widthIn(min = 48.dp)
-                .onFocusChanged { focusState ->
-                    if (wasFocused && !focusState.isFocused) onNameChanged(text)
-                    wasFocused = focusState.isFocused
-                },
-            singleLine = true,
-            textStyle = LocalTextStyle.current.merge(
-                MaterialTheme.typography.titleMedium.copy(color = colors.titleBarContent)
-            ),
-            cursorBrush = SolidColor(colors.titleBarContent),
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    onNameChanged(text)
-                    focusManager.clearFocus()
-                },
-            ),
-        )
-        Icon(
-            imageVector = Icons.Filled.Edit,
-            contentDescription = stringResource(R.string.document_name),
-            tint = colors.titleBarContent,
-            modifier = Modifier.size(16.dp),
-        )
-    }
+    BasicTextField(
+        value = text,
+        onValueChange = { text = it },
+        modifier = modifier
+            .semantics { contentDescription = label }
+            .onFocusChanged { focusState ->
+                if (wasFocused && !focusState.isFocused) onNameChanged(text)
+                wasFocused = focusState.isFocused
+            },
+        singleLine = true,
+        textStyle = LocalTextStyle.current.merge(
+            MaterialTheme.typography.titleMedium.copy(color = colors.titleBarContent)
+        ),
+        cursorBrush = SolidColor(colors.titleBarContent),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                onNameChanged(text)
+                focusManager.clearFocus()
+            },
+        ),
+    )
 }
 
 @Composable

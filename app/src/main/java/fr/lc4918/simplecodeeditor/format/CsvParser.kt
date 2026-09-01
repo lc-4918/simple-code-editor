@@ -17,9 +17,13 @@ object CsvParser {
 
     private const val QUOTE = '"'
 
-    fun parse(content: String): CsvTable? {
+    /**
+     * @param fallback used only when no separator divides the rows evenly,
+     * which is what a single column document looks like
+     */
+    fun parse(content: String, fallback: Char = DELIMITERS.first()): CsvTable? {
         if (content.isBlank()) return null
-        val delimiter = detectDelimiter(content)
+        val delimiter = detectDelimiter(content, fallback)
         val records = readRecords(content, delimiter) ?: return null
         if (records.isEmpty()) return null
 
@@ -41,16 +45,16 @@ object CsvParser {
 
     /**
      * The separator that divides the first rows into the same number of
-     * fields, falling back to the comma when none of them does.
+     * fields, or [fallback] when none of them does.
      */
-    fun detectDelimiter(content: String): Char {
+    fun detectDelimiter(content: String, fallback: Char = DELIMITERS.first()): Char {
         val sample = content.lineSequence().filter { it.isNotBlank() }.take(10).toList()
-        if (sample.isEmpty()) return DELIMITERS.first()
+        if (sample.isEmpty()) return fallback
 
         return DELIMITERS.firstOrNull { delimiter ->
             val counts = sample.map { line -> countOutsideQuotes(line, delimiter) }
             counts.first() > 0 && counts.all { it == counts.first() }
-        } ?: DELIMITERS.first()
+        } ?: fallback
     }
 
     /** Null when a quoted field is left open, which means this is not a table. */

@@ -8,6 +8,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 
+/**
+ * Whether the chosen option comes out dark.
+ *
+ * The system bars need the same answer as the theme, so both read it here
+ * rather than each working it out.
+ */
+@Composable
+fun isDarkTheme(option: ThemeOption): Boolean = when (option) {
+    ThemeOption.SYSTEM -> isSystemInDarkTheme()
+    ThemeOption.LIGHT -> false
+    ThemeOption.DARK -> true
+}
+
 private val DarkColorScheme = darkColorScheme(
     primary = EditorBlueLight,
     secondary = EditorGreenLight,
@@ -32,11 +45,7 @@ fun SimpleCodeEditorTheme(
     themeOption: ThemeOption = ThemeOption.DEFAULT,
     content: @Composable () -> Unit,
 ) {
-    val darkTheme = when (themeOption) {
-        ThemeOption.SYSTEM -> isSystemInDarkTheme()
-        ThemeOption.LIGHT -> false
-        ThemeOption.DARK -> true
-    }
+    val darkTheme = isDarkTheme(themeOption)
 
     CompositionLocalProvider(
         LocalEditorColors provides if (darkTheme) DarkEditorColors else LightEditorColors,

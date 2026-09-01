@@ -4,6 +4,7 @@ import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.fake.FakeDocumentRepository
 import fr.lc4918.simplecodeeditor.fake.FakeSettingsRepository
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
+import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
@@ -300,6 +301,33 @@ class EditorViewModelTest {
         model.sort(chosen = 0, direction = SortDirection.ASCENDING)
 
         assertEquals("[\n  1,\n  2\n]", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `choosing a separator rewrites the open document with it`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.CSV).copy(content = "nom,ville\nada,lyon"),
+        )
+
+        model.setCsvDelimiter(CsvDelimiter.SEMICOLON)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("nom;ville\nada;lyon", model.uiState.value.document.content)
+        assertEquals(CsvDelimiter.SEMICOLON, model.uiState.value.csvDelimiter)
+    }
+
+    @Test
+    fun `choosing a separator leaves a document that is not a table alone`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.JSON).copy(content = """{"a":1}"""),
+        )
+
+        model.setCsvDelimiter(CsvDelimiter.TAB)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("""{"a":1}""", model.uiState.value.document.content)
     }
 
     @Test

@@ -42,6 +42,10 @@ for the current format, such as the table mode on an HTML file, is not offered.
 
 ## Opening and saving
 
+A document can be opened straight from a file browser, which offers the editor
+for the types it knows. A file a provider reports as a plain byte stream is
+opened through the Open action instead.
+
 Documents are read and written through the storage picker of the system, which
 covers the storage of the device and every cloud service installed on it, so no
 account and no provider specific integration is needed. A document opened that
@@ -67,6 +71,12 @@ quotes, or exactly as it stands.
 
 - Interface language: English by default, French and Spanish available.
 - Theme: system, light or dark.
+- Indentation width.
+- CSV separator: comma, semicolon or tab. A document that is opened keeps the
+  separator it was written with, which the reader works out on its own; this
+  choice is what a new document gets, what an opened one falls back to when
+  nothing can be worked out, and what the open document is rewritten with when
+  the choice changes.
 
 ## Build
 

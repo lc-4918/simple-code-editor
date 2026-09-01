@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Simple Code Editor</string>
+    <string name="app_name">Simple Code</string>
 
     <!-- Formats -->
     <string name="format_plain_text">Texte</string>
@@ -46,6 +46,10 @@
     <string name="settings_theme">Thème</string>
     <string name="settings_language">Langue</string>
     <string name="settings_indentation">Indentation</string>
+    <string name="settings_delimiter">Séparateur CSV</string>
+    <string name="delimiter_comma">Virgule</string>
+    <string name="delimiter_semicolon">Point-virgule</string>
+    <string name="delimiter_tab">Tabulation</string>
     <string name="theme_system">Système</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>

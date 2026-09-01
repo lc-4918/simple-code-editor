@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import fr.lc4918.simplecodeeditor.editor.EditorTool
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CopyVariant
+import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.OpenSource
 import fr.lc4918.simplecodeeditor.model.SaveTarget
@@ -37,4 +38,5 @@ class EditorActions(
     val onThemeSelected: (ThemeOption) -> Unit,
     val onLanguageSelected: (AppLanguage) -> Unit,
     val onIndentWidthSelected: (Int) -> Unit,
+    val onCsvDelimiterSelected: (CsvDelimiter) -> Unit,
 )

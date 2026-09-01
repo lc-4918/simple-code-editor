@@ -61,6 +61,29 @@ class CsvParserTest {
     }
 
     @Test
+    fun `a single column falls back to the chosen separator`() {
+        val table = CsvParser.parse("name\nada\nlinus", fallback = ';')!!
+
+        assertEquals(';', table.delimiter)
+        assertEquals(listOf("name"), table.header)
+    }
+
+    @Test
+    fun `what the document uses wins over the chosen separator`() {
+        val table = CsvParser.parse("name,city\nada,lyon", fallback = ';')!!
+
+        assertEquals(',', table.delimiter)
+    }
+
+    @Test
+    fun `a tab separated document is read as such`() {
+        val table = CsvParser.parse("name\tcity\nada\tlyon")!!
+
+        assertEquals('\t', table.delimiter)
+        assertEquals(listOf("ada", "lyon"), table.rows.single())
+    }
+
+    @Test
     fun `an unterminated quote is not a table`() {
         assertNull(CsvParser.parse("a,b\n\"never closed"))
     }

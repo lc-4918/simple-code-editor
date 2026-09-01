@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.data.SettingsRepository
 import fr.lc4918.simplecodeeditor.model.AppLanguage
+import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.LabelledOption
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 
@@ -30,9 +31,11 @@ fun SettingsSheet(
     theme: ThemeOption,
     language: AppLanguage,
     indentWidth: Int,
+    csvDelimiter: CsvDelimiter,
     onThemeSelected: (ThemeOption) -> Unit,
     onLanguageSelected: (AppLanguage) -> Unit,
     onIndentWidthSelected: (Int) -> Unit,
+    onCsvDelimiterSelected: (CsvDelimiter) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -65,6 +68,12 @@ fun SettingsSheet(
             IndentSection(
                 selected = indentWidth,
                 onSelected = onIndentWidthSelected,
+            )
+            OptionSection(
+                title = stringResource(R.string.settings_delimiter),
+                options = CsvDelimiter.entries,
+                selected = csvDelimiter,
+                onSelected = onCsvDelimiterSelected,
             )
         }
     }

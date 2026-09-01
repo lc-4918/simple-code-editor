@@ -19,6 +19,7 @@ import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.format.JsonWriter
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
+import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.CsvTable
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.SortDirection
@@ -60,6 +61,11 @@ class EditorViewModel(
         }
         viewModelScope.launch {
             settings.indentWidth.collect { width -> _uiState.update { it.copy(indentWidth = width) } }
+        }
+        viewModelScope.launch {
+            settings.csvDelimiter.collect { value ->
+                _uiState.update { it.copy(csvDelimiter = value) }
+            }
         }
     }
 
@@ -315,7 +321,9 @@ class EditorViewModel(
     }
 
     private fun rewriteTable(transform: (CsvTable) -> CsvTable) {
-        val table = CsvParser.parse(_uiState.value.document.content) ?: return
+        val state = _uiState.value
+        if (state.format != DocumentFormat.CSV) return
+        val table = CsvParser.parse(state.document.content, state.csvDelimiter.character) ?: return
         rewrite { CsvParser.format(transform(table)) }
     }
 
@@ -357,6 +365,17 @@ class EditorViewModel(
 
     fun setIndentWidth(width: Int) {
         viewModelScope.launch { settings.setIndentWidth(width) }
+    }
+
+    /**
+     * Chooses the separator, and rewrites the open document with it.
+     *
+     * Without the rewrite the choice would only show on the next document,
+     * which is not what picking a separator while looking at a grid means.
+     */
+    fun setCsvDelimiter(delimiter: CsvDelimiter) {
+        viewModelScope.launch { settings.setCsvDelimiter(delimiter) }
+        rewriteTable { table -> table.copy(delimiter = delimiter.character) }
     }
 
     /** Falls back to the text mode when the current one is not offered by the format. */

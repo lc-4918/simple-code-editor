@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Simple Code Editor</string>
+    <string name="app_name">Simple Code</string>
 
     <!-- Formats -->
     <string name="format_json">JSON</string>
@@ -52,6 +52,10 @@
     <string name="settings_theme">Theme</string>
     <string name="settings_language">Language</string>
     <string name="settings_indentation">Indentation</string>
+    <string name="settings_delimiter">CSV separator</string>
+    <string name="delimiter_comma">Comma</string>
+    <string name="delimiter_semicolon">Semicolon</string>
+    <string name="delimiter_tab">Tab</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
