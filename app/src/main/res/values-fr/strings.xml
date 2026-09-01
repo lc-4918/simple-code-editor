@@ -16,8 +16,6 @@
     <string name="action_open">Ouvrir</string>
     <string name="action_save">Enregistrer</string>
     <string name="action_copy">Copier</string>
-    <string name="action_full_screen">Plein écran</string>
-    <string name="action_exit_full_screen">Quitter le plein écran</string>
     <string name="action_settings">Paramètres</string>
 
     <string name="open_from_device">Ouvrir depuis cet appareil</string>

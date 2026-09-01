@@ -12,9 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
@@ -24,8 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.lc4918.simplecodeeditor.data.LocaleController
@@ -77,10 +73,6 @@ class MainActivity : AppCompatActivity() {
                     viewModel.open(DocumentLocation(uri.toString()))
                     pendingDocument.value = null
                 }
-            }
-
-            LaunchedEffect(state.isFullScreen) {
-                setSystemBarsVisible(!state.isFullScreen)
             }
 
             // The system bars sit over the application, not over the system,
@@ -150,7 +142,6 @@ class MainActivity : AppCompatActivity() {
                             viewModel.reportCopied()
                         }
                     },
-                    onToggleFullScreen = viewModel::toggleFullScreen,
                     onViewModeSelected = viewModel::setViewMode,
                     onTool = viewModel::onTool,
                     onCellChanged = viewModel::onCellChanged,
@@ -168,14 +159,6 @@ class MainActivity : AppCompatActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) },
-                    // Nothing is kept clear of the system bars in full screen,
-                    // since they are not there: leaving the room they take
-                    // would give the document a band of nothing instead.
-                    contentWindowInsets = if (state.isFullScreen) {
-                        WindowInsets(0)
-                    } else {
-                        ScaffoldDefaults.contentWindowInsets
-                    },
                 ) { innerPadding ->
                     EditorScreen(
                         state = state,
@@ -206,17 +189,6 @@ class MainActivity : AppCompatActivity() {
         controller.isAppearanceLightNavigationBars = light
     }
 
-    /** Hides the status and navigation bars while the editor is in full screen. */
-    private fun setSystemBarsVisible(visible: Boolean) {
-        val controller = WindowCompat.getInsetsController(window, window.decorView)
-        if (visible) {
-            controller.show(WindowInsetsCompat.Type.systemBars())
-        } else {
-            controller.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            controller.hide(WindowInsetsCompat.Type.systemBars())
-        }
-    }
 }
 
 /** The document a browser is asking to open, when that is what the intent says. */

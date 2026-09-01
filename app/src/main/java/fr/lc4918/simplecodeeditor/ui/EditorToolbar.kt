@@ -19,7 +19,6 @@ import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.FilterAlt
-import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
@@ -53,7 +52,6 @@ fun EditorToolbar(
     state: EditorUiState,
     onViewModeSelected: (ViewMode) -> Unit,
     onTool: (EditorTool) -> Unit,
-    onExitFullScreen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEditorColors.current
@@ -69,20 +67,6 @@ fun EditorToolbar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        // The title bar, which holds the way out, is gone in full screen, so
-        // the way back has to be here, and first, where it cannot be scrolled
-        // out of sight.
-        if (state.isFullScreen) {
-            IconButton(onClick = onExitFullScreen, modifier = Modifier.size(36.dp)) {
-                Icon(
-                    imageVector = Icons.Filled.FullscreenExit,
-                    contentDescription = stringResource(R.string.action_exit_full_screen),
-                    tint = colors.toolbarContent,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Spacer(Modifier.width(6.dp))
-        }
         if (modes.size > 1) {
             ViewModeSelector(
                 modes = modes,

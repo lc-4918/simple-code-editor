@@ -28,7 +28,6 @@ class EditorActions(
     val onSave: (SaveTarget) -> Unit,
     val onSaveUrl: (String) -> Unit,
     val onCopy: (CopyVariant) -> Unit,
-    val onToggleFullScreen: () -> Unit,
     val onViewModeSelected: (ViewMode) -> Unit,
     val onTool: (EditorTool) -> Unit,
     val onCellChanged: (row: Int, column: Int, value: String) -> Unit,

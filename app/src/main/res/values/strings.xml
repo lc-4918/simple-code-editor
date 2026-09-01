@@ -22,8 +22,6 @@
     <string name="action_open">Open</string>
     <string name="action_save">Save</string>
     <string name="action_copy">Copy</string>
-    <string name="action_full_screen">Full screen</string>
-    <string name="action_exit_full_screen">Exit full screen</string>
     <string name="action_settings">Settings</string>
 
     <string name="open_from_device">Open from this device</string>

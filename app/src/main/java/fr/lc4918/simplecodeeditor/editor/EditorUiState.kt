@@ -27,7 +27,6 @@ data class EditorUiState(
     val isLanguageLoaded: Boolean = false,
     val indentWidth: Int = SettingsRepository.DEFAULT_INDENT_WIDTH,
     val csvDelimiter: CsvDelimiter = CsvDelimiter.DEFAULT,
-    val isFullScreen: Boolean = false,
     val isSearchVisible: Boolean = false,
     val searchQuery: String = "",
     val canUndo: Boolean = false,

@@ -16,8 +16,6 @@
     <string name="action_open">Abrir</string>
     <string name="action_save">Guardar</string>
     <string name="action_copy">Copiar</string>
-    <string name="action_full_screen">Pantalla completa</string>
-    <string name="action_exit_full_screen">Salir de pantalla completa</string>
     <string name="action_settings">Ajustes</string>
 
     <string name="open_from_device">Abrir desde este dispositivo</string>

@@ -339,10 +339,6 @@ class EditorViewModel(
         _uiState.update { it.copy(viewMode = mode) }
     }
 
-    fun toggleFullScreen() {
-        _uiState.update { it.copy(isFullScreen = !it.isFullScreen) }
-    }
-
     fun setSearchVisible(visible: Boolean) {
         _uiState.update {
             it.copy(isSearchVisible = visible, searchQuery = if (visible) it.searchQuery else "")

@@ -13,7 +13,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
@@ -50,7 +49,9 @@ import fr.lc4918.simplecodeeditor.ui.theme.LocalEditorColors
  * First row of the sticky header: the document name and the document actions.
  *
  * The smart formatted copy of the reference editor is deliberately absent from
- * the copy menu.
+ * the copy menu, and so is its full screen toggle: on a phone the editor
+ * already fills the screen, and the two rows it could win back are the ones
+ * that are worked with.
  */
 @Composable
 fun EditorTitleBar(
@@ -60,7 +61,6 @@ fun EditorTitleBar(
     onOpen: (OpenSource) -> Unit,
     onSave: (SaveTarget) -> Unit,
     onCopy: (CopyVariant) -> Unit,
-    onToggleFullScreen: () -> Unit,
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -100,13 +100,6 @@ fun EditorTitleBar(
             label = stringResource(R.string.action_copy),
             options = CopyVariant.entries,
             onSelected = onCopy,
-        )
-        // The row is not drawn in full screen, so the icon only ever offers to
-        // enter it; the way back sits in the toolbar.
-        TitleBarAction(
-            icon = Icons.Filled.Fullscreen,
-            label = stringResource(R.string.action_full_screen),
-            onClick = onToggleFullScreen,
         )
         TitleBarAction(
             icon = Icons.Filled.Settings,
