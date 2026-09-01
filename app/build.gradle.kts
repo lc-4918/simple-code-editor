@@ -12,13 +12,18 @@ plugins {
  * git describe gives the bare tag; anywhere else it gives a descriptive name
  * such as v1.0.0-3-g413b197, which is what a development build wants.
  *
+ * Whether the tree is clean is deliberately left out. It says nothing the file
+ * name needs, and a checkout that looks modified for reasons of its own, which
+ * is what happens on a runner, would name the release after a state instead of
+ * after its tag.
+ *
  * Read through the provider so that the configuration cache knows about it: a
  * process started straight from the build script would not be recorded and the
  * cache would hand back a stale version.
  */
 val gitVersion: String = runCatching {
     providers.exec {
-        commandLine("git", "describe", "--tags", "--always", "--dirty")
+        commandLine("git", "describe", "--tags", "--always")
     }.standardOutput.asText.get().trim()
 }.getOrNull()?.ifBlank { null } ?: "v0.0.0"
 

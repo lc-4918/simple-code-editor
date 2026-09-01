@@ -94,7 +94,10 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           set -euo pipefail
-          echo "describe: $(git describe --tags --always --dirty)"
+          echo "describe: $(git describe --tags --always)"
+          # A build that leaves tracked files changed is worth seeing, since
+          # the version is read from the same repository it would be dirtying.
+          git status --porcelain
           ls -l app/build/outputs/apk/release/
           test -f "app/build/outputs/apk/release/simple-code-${TAG}.apk"
 
