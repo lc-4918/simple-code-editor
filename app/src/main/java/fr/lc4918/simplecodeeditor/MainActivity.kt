@@ -148,6 +148,7 @@ class MainActivity : AppCompatActivity() {
                     },
                     onViewModeSelected = viewModel::setViewMode,
                     onTool = viewModel::onTool,
+                    onTogglePreview = viewModel::togglePreview,
                     onRepaired = viewModel::applyRepair,
                     onRepairXml = viewModel::repairXml,
                     onTreeNameTyped = viewModel::onTreeNameTyped,

@@ -17,6 +17,8 @@ data class FormatCapabilities(
     val filter: Boolean = false,
     val search: Boolean = true,
     val undoRedo: Boolean = true,
+    /** Whether the document can be shown as it will be read, not as written. */
+    val preview: Boolean = false,
 ) {
     fun supports(mode: ViewMode): Boolean = when (mode) {
         ViewMode.TEXT -> textMode
@@ -59,6 +61,10 @@ data class FormatCapabilities(
             DocumentFormat.JAVASCRIPT -> FormatCapabilities(
                 indent = true,
                 compact = true,
+            )
+
+            DocumentFormat.MARKDOWN -> FormatCapabilities(
+                preview = true,
             )
 
             DocumentFormat.CSV -> FormatCapabilities(

@@ -705,6 +705,56 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `markdown can be shown as it will be read, and back`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.MARKDOWN).copy(content = "# Title"))
+
+        model.togglePreview()
+        assertTrue(model.uiState.value.isPreviewing)
+
+        model.togglePreview()
+        assertFalse(model.uiState.value.isPreviewing)
+    }
+
+    @Test
+    fun `a format with nothing to preview never shows one`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON))
+
+        model.togglePreview()
+
+        assertFalse(model.uiState.value.isPreviewing)
+    }
+
+    @Test
+    fun `opening another document puts the preview away`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.MARKDOWN).copy(content = "# Title"))
+        model.togglePreview()
+        assertTrue(model.uiState.value.isPreviewing)
+
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON))
+
+        assertFalse(model.uiState.value.isPreviewing)
+    }
+
+    @Test
+    fun `a markdown file is recognised by its name`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onDocumentNameChanged("notes.md")
+
+        assertEquals(DocumentFormat.MARKDOWN, model.uiState.value.format)
+    }
+
+    @Test
+    fun `a plain text file is recognised by its name`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onDocumentNameChanged("notes.txt")
+
+        assertEquals(DocumentFormat.PLAIN_TEXT, model.uiState.value.format)
+    }
+
+    @Test
     fun `theme changes are persisted and reflected in the state`() = runTest(dispatcher) {
         val model = viewModel()
         model.setTheme(ThemeOption.DARK)

@@ -501,6 +501,18 @@ class EditorViewModel(
         _uiState.update { it.copy(viewMode = mode) }
     }
 
+    /**
+     * Shows the document as it will be read, or back as it is written.
+     *
+     * Only offered by a format that has a shape of its own to show, which for
+     * now is markdown alone.
+     */
+    fun togglePreview() {
+        _uiState.update { state ->
+            if (!state.capabilities.preview) state else state.copy(isPreviewing = !state.isPreviewing)
+        }
+    }
+
     fun setSearchVisible(visible: Boolean) {
         _uiState.update {
             it.copy(isSearchVisible = visible, searchQuery = if (visible) it.searchQuery else "")
@@ -590,8 +602,12 @@ class EditorViewModel(
     }
 
     /** Falls back to the text mode when the current one is not offered by the format. */
-    private fun EditorUiState.coerceViewMode(): EditorUiState =
-        if (capabilities.supports(viewMode)) this else copy(viewMode = ViewMode.TEXT)
+    private fun EditorUiState.coerceViewMode(): EditorUiState {
+        val coerced = if (capabilities.supports(viewMode)) this else copy(viewMode = ViewMode.TEXT)
+        // A format with nothing to preview is never left showing one, which
+        // opening another document into the same editor would otherwise do.
+        return if (coerced.capabilities.preview) coerced else coerced.copy(isPreviewing = false)
+    }
 
     companion object {
         /** Keystrokes closer together than this share a single undo entry. */

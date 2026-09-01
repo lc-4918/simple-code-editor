@@ -18,7 +18,7 @@ object DocumentFormatter {
         DocumentFormat.JAVASCRIPT ->
             CodeFormatter.indent(content, CodeFormatter.Dialect.SCRIPT, width)
 
-        DocumentFormat.CSV, DocumentFormat.PLAIN_TEXT -> content
+        DocumentFormat.CSV, DocumentFormat.MARKDOWN, DocumentFormat.PLAIN_TEXT -> content
     }
 
     fun compact(content: String, format: DocumentFormat): String = when (format) {
@@ -27,7 +27,7 @@ object DocumentFormatter {
         DocumentFormat.HTML -> MarkupFormatter.compact(content, html = true)
         DocumentFormat.CSS -> CodeFormatter.compact(content, CodeFormatter.Dialect.STYLE)
         DocumentFormat.JAVASCRIPT -> CodeFormatter.compact(content, CodeFormatter.Dialect.SCRIPT)
-        DocumentFormat.CSV, DocumentFormat.PLAIN_TEXT -> content
+        DocumentFormat.CSV, DocumentFormat.MARKDOWN, DocumentFormat.PLAIN_TEXT -> content
     }
 
     /**

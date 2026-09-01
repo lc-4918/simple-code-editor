@@ -4,6 +4,9 @@
 
     <!-- Formats -->
     <string name="format_plain_text">Texto</string>
+    <string name="format_markdown">Markdown</string>
+    <string name="action_preview">Vista previa</string>
+    <string name="action_edit">Editar</string>
 
     <!-- View modes -->
     <string name="mode_text">texto</string>

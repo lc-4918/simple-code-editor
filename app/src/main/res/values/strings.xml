@@ -10,6 +10,9 @@
     <string name="format_javascript">JavaScript</string>
     <string name="format_csv">CSV</string>
     <string name="format_plain_text">Text</string>
+    <string name="format_markdown">Markdown</string>
+    <string name="action_preview">Preview</string>
+    <string name="action_edit">Edit</string>
 
     <!-- View modes -->
     <string name="mode_text">text</string>

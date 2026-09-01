@@ -32,6 +32,7 @@ class EditorActions(
     val onCopy: (CopyVariant) -> Unit,
     val onViewModeSelected: (ViewMode) -> Unit,
     val onTool: (EditorTool) -> Unit,
+    val onTogglePreview: () -> Unit,
     val onRepaired: (String?) -> Unit,
     val onRepairXml: () -> Unit,
     val onTreeNameTyped: (TreeNode, String) -> Unit,

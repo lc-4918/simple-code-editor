@@ -43,6 +43,8 @@ data class EditorUiState(
     /** The release worth taking, once one has been found. */
     val availableUpdate: ReleaseInfo? = null,
     val isSearchVisible: Boolean = false,
+    /** Whether the document is being shown as it will be read. */
+    val isPreviewing: Boolean = false,
     val searchQuery: String = "",
     val canUndo: Boolean = false,
     val canRedo: Boolean = false,

@@ -46,6 +46,12 @@ enum class DocumentFormat(
         mimeTypes = listOf("text/javascript", "application/javascript", "application/x-javascript"),
         defaultExtension = "js",
     ),
+    MARKDOWN(
+        labelRes = R.string.format_markdown,
+        extensions = listOf("md", "markdown", "mdown", "mkd"),
+        mimeTypes = listOf("text/markdown", "text/x-markdown"),
+        defaultExtension = "md",
+    ),
     CSV(
         labelRes = R.string.format_csv,
         extensions = listOf("csv", "tsv"),

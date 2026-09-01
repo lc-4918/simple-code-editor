@@ -8,6 +8,15 @@ import org.junit.Test
 class FormatCapabilitiesTest {
 
     @Test
+    fun `only markdown has a shape of its own to show`() {
+        DocumentFormat.entries.forEach { format ->
+            val expected = format == DocumentFormat.MARKDOWN
+            assertEquals(format.name, expected, format.capabilities.preview)
+        }
+    }
+
+
+    @Test
     fun `table mode is offered for csv only`() {
         DocumentFormat.entries.forEach { format ->
             val expected = format == DocumentFormat.CSV

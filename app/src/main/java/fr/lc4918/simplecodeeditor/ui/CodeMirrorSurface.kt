@@ -49,6 +49,7 @@ fun CodeMirrorSurface(
     format: DocumentFormat,
     indentWidth: Int,
     isSearchVisible: Boolean,
+    isPreviewing: Boolean,
     diagnostic: Diagnostic?,
     controller: CodeMirrorController,
     onContentChanged: (String) -> Unit,
@@ -89,6 +90,8 @@ fun CodeMirrorSurface(
     LaunchedEffect(controller, colors) { controller.setColors(colors) }
     LaunchedEffect(controller, phrases) { controller.setPhrases(phrases) }
     LaunchedEffect(controller, isSearchVisible) { controller.setSearchVisible(isSearchVisible) }
+    // Also on the content, so what is shown follows what is written.
+    LaunchedEffect(controller, isPreviewing, content) { controller.setPreview(isPreviewing) }
     LaunchedEffect(controller, diagnostic, problemText) {
         controller.setDiagnostic(diagnostic?.offset, problemText)
     }
@@ -161,6 +164,11 @@ class CodeMirrorController {
 
     fun setPhrases(phrases: String) {
         call("SimpleCodeEditor.setPhrases($phrases);")
+    }
+
+    /** Shows the document as it will be read, or back as it is written. */
+    fun setPreview(visible: Boolean) {
+        call("SimpleCodeEditor.setPreview($visible);")
     }
 
     fun setSearchVisible(visible: Boolean) {

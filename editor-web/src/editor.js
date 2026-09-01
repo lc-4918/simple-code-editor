@@ -15,7 +15,9 @@ import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
+import { markdown } from "@codemirror/lang-markdown";
 import { xml } from "@codemirror/lang-xml";
+import { marked } from "marked";
 import { tags } from "@lezer/highlight";
 
 const languageConf = new Compartment();
@@ -31,9 +33,13 @@ const languages = {
     HTML: html,
     CSS: css,
     JAVASCRIPT: javascript,
+    MARKDOWN: markdown,
 };
 
 const lightPalette = {
+    heading: "#0451a5",
+    marker: "#7f7f7f",
+    link: "#3883fa",
     keyword: "#7f0055",
     string: "#a31515",
     number: "#098658",
@@ -46,6 +52,9 @@ const lightPalette = {
 };
 
 const darkPalette = {
+    heading: "#9cdcfe",
+    marker: "#9a9a9a",
+    link: "#7cb7ff",
     keyword: "#c586c0",
     string: "#ce9178",
     number: "#b5cea8",
@@ -77,7 +86,40 @@ function highlightFor(palette) {
         { tag: [tags.attributeName], color: palette.attribute },
         { tag: [tags.punctuation, tags.separator, tags.bracket], color: palette.punctuation },
         { tag: tags.invalid, color: "#e45649" },
+
+        // What markdown is made of. None of the tags above apply to it, which
+        // is why it came out as plain text.
+        { tag: tags.heading, color: palette.heading, fontWeight: "bold" },
+        { tag: tags.strong, color: palette.property, fontWeight: "bold" },
+        { tag: tags.emphasis, color: palette.property, fontStyle: "italic" },
+        { tag: tags.strikethrough, textDecoration: "line-through" },
+        { tag: [tags.link, tags.url], color: palette.link, textDecoration: "underline" },
+        { tag: tags.monospace, color: palette.string },
+        { tag: tags.quote, color: palette.comment, fontStyle: "italic" },
+        { tag: tags.list, color: palette.marker },
+        // The hashes, dashes and backticks that carry the meaning rather than
+        // the text: dimmed, so the text they mark stands out from them.
+        { tag: [tags.processingInstruction, tags.contentSeparator], color: palette.marker },
     ]);
+}
+
+function previewStyle(colors) {
+    return `<style>
+      body { margin: 0; padding: 12px 16px; background: ${colors.codeBackground};
+             color: ${colors.codeText}; font-family: system-ui, sans-serif;
+             line-height: 1.5; overflow-wrap: break-word; }
+      a { color: ${colors.dark ? "#9ec1fd" : "#3883fa"}; }
+      code, pre { background: ${colors.gutterBackground}; border-radius: 4px; }
+      code { padding: 1px 4px; font-family: monospace; }
+      pre { padding: 10px; overflow-x: auto; }
+      pre code { background: none; padding: 0; }
+      blockquote { margin: 0 0 0 4px; padding-left: 12px;
+                   border-left: 3px solid ${colors.gutterText}; color: ${colors.gutterText}; }
+      table { border-collapse: collapse; }
+      th, td { border: 1px solid ${colors.gutterText}; padding: 4px 8px; }
+      img { max-width: 100%; }
+      hr { border: none; border-top: 1px solid ${colors.gutterText}; }
+    </style>`;
 }
 
 function themeFor(colors) {
@@ -127,6 +169,15 @@ function themeFor(colors) {
     );
     return [view, syntaxHighlighting(highlightFor(colors.dark ? darkPalette : lightPalette))];
 }
+
+/**
+ * What the rendered document is dressed in.
+ *
+ * Written into the frame rather than linked, the frame being allowed no
+ * connection of its own, and following the colours of the surface so that the
+ * two ways of looking at one document belong to the same editor.
+ */
+let PREVIEW_STYLE = "";
 
 const startColors = {
     dark: true,
@@ -189,6 +240,33 @@ window.SimpleCodeEditor = {
 
     setColors(colors) {
         view.dispatch({ effects: themeConf.reconfigure(themeFor(colors)) });
+        PREVIEW_STYLE = previewStyle(colors);
+        const frame = document.getElementById("preview");
+        if (frame && !frame.hidden) {
+            frame.srcdoc = PREVIEW_STYLE + marked.parse(view.state.doc.toString());
+        }
+    },
+
+    /**
+     * Shows the document as it will be read, or hides that again.
+     *
+     * What is rendered goes into a frame that is allowed nothing: no script
+     * of its own runs and it cannot reach back here. The document belongs to
+     * whoever opened it, but a document can come from anywhere, and the page
+     * it is rendered on holds the bridge to the application.
+     */
+    setPreview(visible) {
+        const frame = document.getElementById("preview");
+        const editor = document.getElementById("editor");
+        if (!visible) {
+            frame.hidden = true;
+            editor.hidden = false;
+            frame.srcdoc = "";
+            return;
+        }
+        frame.srcdoc = PREVIEW_STYLE + marked.parse(view.state.doc.toString());
+        editor.hidden = true;
+        frame.hidden = false;
     },
 
     /**

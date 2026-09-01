@@ -17,6 +17,14 @@ and block folding.
 | CSS | |
 | JavaScript | |
 | CSV | TSV |
+| Markdown | |
+| Plain text | |
+
+A markdown document is shown as it will be read as well as as it is written,
+by a toggle in the second row of the header that no other format offers. The
+rendered document goes into a frame that is allowed nothing: no script of its
+own runs and it cannot reach the page that holds it, which carries the bridge
+to the application. A markdown file can come from anywhere.
 
 ## View modes
 

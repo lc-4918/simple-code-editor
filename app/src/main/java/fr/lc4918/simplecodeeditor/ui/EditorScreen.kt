@@ -73,6 +73,7 @@ fun EditorScreen(
         EditorToolbar(
             state = state,
             onViewModeSelected = actions.onViewModeSelected,
+            onTogglePreview = actions.onTogglePreview,
             onTool = { tool ->
                 val tree = treeRoot
                 when {
@@ -116,6 +117,7 @@ fun EditorScreen(
                     format = state.format,
                     indentWidth = state.indentWidth,
                     isSearchVisible = state.isSearchVisible,
+                    isPreviewing = state.isPreviewing,
                     diagnostic = state.diagnostic,
                     controller = editor,
                     onContentChanged = actions.onContentChanged,

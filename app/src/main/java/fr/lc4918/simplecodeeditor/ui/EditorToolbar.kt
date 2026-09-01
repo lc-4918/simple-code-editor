@@ -18,10 +18,12 @@ import androidx.compose.material.icons.automirrored.filled.FormatIndentIncrease
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.UnfoldLess
 import androidx.compose.material.icons.filled.UnfoldMore
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +54,7 @@ fun EditorToolbar(
     state: EditorUiState,
     onViewModeSelected: (ViewMode) -> Unit,
     onTool: (EditorTool) -> Unit,
+    onTogglePreview: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEditorColors.current
@@ -74,6 +77,29 @@ fun EditorToolbar(
                 onSelected = onViewModeSelected,
             )
             Spacer(Modifier.width(6.dp))
+        }
+        // Only a format with a shape of its own to show offers this, and it
+        // sits with the tools rather than with the modes: it says how the one
+        // surface is drawn, not which surface is drawn.
+        if (state.capabilities.preview) {
+            IconButton(onClick = onTogglePreview, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    imageVector = if (state.isPreviewing) {
+                        Icons.Filled.EditNote
+                    } else {
+                        Icons.Filled.Visibility
+                    },
+                    contentDescription = stringResource(
+                        if (state.isPreviewing) R.string.action_edit else R.string.action_preview,
+                    ),
+                    tint = if (state.isPreviewing) {
+                        colors.toolbarSelectedBackground
+                    } else {
+                        colors.toolbarContent
+                    },
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
         tools.forEach { tool ->
             ToolButton(
