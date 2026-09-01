@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -158,16 +159,23 @@ private fun DataRow(
         modifier = Modifier.fillMaxWidth().height(ROW_HEIGHT),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = (row + 1).toString(),
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.gutterText,
-            maxLines = 1,
+        // A band rather than a chip: the gutter has to run the height of the
+        // row, as the one beside the line numbers does in text mode.
+        Box(
             modifier = Modifier
                 .width(gutterWidth)
-                .background(colors.gutterBackground)
-                .padding(horizontal = 8.dp),
-        )
+                .fillMaxHeight()
+                .background(colors.gutterBackground),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            Text(
+                text = (row + 1).toString(),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.gutterText,
+                maxLines = 1,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+        }
         Row(
             modifier = Modifier.horizontalScroll(scroll),
             horizontalArrangement = Arrangement.spacedBy(1.dp),
