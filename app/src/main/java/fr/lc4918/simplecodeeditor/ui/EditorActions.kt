@@ -34,6 +34,9 @@ class EditorActions(
     val onRepaired: (String?) -> Unit,
     val onTreeNameTyped: (TreeNode, String) -> Unit,
     val onTreeValueTyped: (TreeNode, String) -> Unit,
+    val onTreeAction: (TreeNode, TreeAction) -> Unit,
+    /** Whether the clipboard holds something a node could be made of. */
+    val canPasteIntoTree: () -> Boolean,
     val onCellChanged: (row: Int, column: Int, value: String) -> Unit,
     val onAddRow: () -> Unit,
     val onSort: (column: Int, direction: SortDirection) -> Unit,

@@ -135,6 +135,8 @@ fun EditorScreen(
                     },
                     onNameTyped = actions.onTreeNameTyped,
                     onValueTyped = actions.onTreeValueTyped,
+                    canPaste = actions.canPasteIntoTree(),
+                    onAction = actions.onTreeAction,
                 )
             }
         }

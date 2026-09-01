@@ -7,11 +7,13 @@ import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentProblem
+import fr.lc4918.simplecodeeditor.model.NodeKind
 import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.SortDirection
+import fr.lc4918.simplecodeeditor.ui.Where
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
 import kotlinx.coroutines.Dispatchers
@@ -534,6 +536,64 @@ class EditorViewModelTest {
 
         val container = JsonTree.parse(source)!!.children.single()
         model.onTreeValueTyped(container, "9")
+
+        assertEquals(source, model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `removing a node from the tree is one step in the history`() = runTest(dispatcher) {
+        val source = """{"a":1,"b":2}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        model.removeNode(JsonTree.parse(source)!!.children.first())
+        assertEquals("""{"b":2}""", model.uiState.value.document.content)
+
+        model.undo()
+        assertEquals(source, model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `duplicating a member gives the copy a key of its own`() = runTest(dispatcher) {
+        val source = """{"a":1}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        model.duplicateNode(JsonTree.parse(source)!!.children.single())
+
+        assertEquals("""{"a":1,"a copy":1}""", model.uiState.value.document.content)
+        assertEquals(null, model.uiState.value.diagnostic)
+    }
+
+    @Test
+    fun `extracting a subtree keeps it alone`() = runTest(dispatcher) {
+        val source = """{"a":{"b":1},"c":2}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        model.extractNode(JsonTree.parse(source)!!.children.first().children.single())
+
+        assertEquals(""""b":1""", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `inserting after a node puts the text beside it`() = runTest(dispatcher) {
+        val source = """{"a":1}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        model.insertNode(JsonTree.parse(source)!!.children.single(), Where.AFTER, """"b":2""")
+
+        assertEquals("""{"a":1,"b":2}""", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a move that has no meaning leaves the document alone`() = runTest(dispatcher) {
+        val source = """{"a":1}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        model.removeNode(fr.lc4918.simplecodeeditor.model.TreeNode("x", NodeKind.STRING, "y"))
 
         assertEquals(source, model.uiState.value.document.content)
     }

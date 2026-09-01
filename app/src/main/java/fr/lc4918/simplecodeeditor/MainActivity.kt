@@ -28,9 +28,11 @@ import fr.lc4918.simplecodeeditor.data.LocaleController
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
 import fr.lc4918.simplecodeeditor.editor.EditorViewModel
 import fr.lc4918.simplecodeeditor.format.DocumentFormatter
+import fr.lc4918.simplecodeeditor.format.TreeStructure
 import fr.lc4918.simplecodeeditor.model.CopyVariant
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.EditorDocument
+import fr.lc4918.simplecodeeditor.model.NodeKind
 import fr.lc4918.simplecodeeditor.model.OpenSource
 import fr.lc4918.simplecodeeditor.model.SaveTarget
 import fr.lc4918.simplecodeeditor.ui.CreateDocumentAt
@@ -38,6 +40,8 @@ import fr.lc4918.simplecodeeditor.ui.EditorActions
 import fr.lc4918.simplecodeeditor.ui.EditorScreen
 import fr.lc4918.simplecodeeditor.ui.NewDocument
 import fr.lc4918.simplecodeeditor.ui.OpenEditableDocument
+import fr.lc4918.simplecodeeditor.ui.TreeAction
+import fr.lc4918.simplecodeeditor.ui.Where
 import fr.lc4918.simplecodeeditor.ui.theme.SimpleCodeEditorTheme
 import fr.lc4918.simplecodeeditor.ui.theme.isDarkTheme
 
@@ -147,6 +151,39 @@ class MainActivity : AppCompatActivity() {
                     onRepaired = viewModel::applyRepair,
                     onTreeNameTyped = viewModel::onTreeNameTyped,
                     onTreeValueTyped = viewModel::onTreeValueTyped,
+                    // Cutting, copying and pasting go through the clipboard of
+                    // the system, which the activity holds and the view model
+                    // has no business knowing about.
+                    onTreeAction = { node, action ->
+                        val label = viewModel.uiState.value.document.fileName()
+                        when (action) {
+                            TreeAction.Copy ->
+                                viewModel.textOf(node)?.let { copyToClipboard(label, it) }
+
+                            TreeAction.Cut -> {
+                                viewModel.textOf(node)?.let { copyToClipboard(label, it) }
+                                viewModel.removeNode(node)
+                            }
+
+                            TreeAction.Duplicate -> viewModel.duplicateNode(node)
+                            TreeAction.Extract -> viewModel.extractNode(node)
+                            TreeAction.Remove -> viewModel.removeNode(node)
+                            is TreeAction.Paste -> pasteFromClipboard()
+                                ?.let { viewModel.insertNode(node, action.where, it) }
+
+                            is TreeAction.Insert -> viewModel.insertNode(
+                                node,
+                                action.where,
+                                TreeStructure.skeleton(
+                                    format = viewModel.uiState.value.format,
+                                    kind = action.kind,
+                                    named = action.where != Where.INTO ||
+                                        node.kind == NodeKind.OBJECT,
+                                ),
+                            )
+                        }
+                    },
+                    canPasteIntoTree = { pasteFromClipboard() != null },
                     onCellChanged = viewModel::onCellChanged,
                     onAddRow = viewModel::addRow,
                     onSort = viewModel::sort,
@@ -171,6 +208,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /** What the clipboard holds, when it holds text. */
+    private fun pasteFromClipboard(): String? {
+        val clipboard = getSystemService(ClipboardManager::class.java)
+        val clip = clipboard.primaryClip ?: return null
+        return clip.getItemAt(0)?.coerceToText(this)?.toString()?.takeIf { it.isNotBlank() }
     }
 
     private fun copyToClipboard(label: String, text: String) {

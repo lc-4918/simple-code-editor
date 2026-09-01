@@ -100,12 +100,14 @@ object XmlTree {
             // The span skips the whitespace the trimming dropped, so that
             // replacing the text leaves the layout around it alone.
             val start = at + raw.indexOf(trimmed)
+            val span = Span(start, start + trimmed.length)
             return TreeNode(
                 name = "",
                 kind = NodeKind.TEXT,
                 value = trimmed,
                 offset = at,
-                valueSpan = Span(start, start + trimmed.length),
+                valueSpan = span,
+                entrySpan = span,
             )
         }
 
@@ -129,6 +131,8 @@ object XmlTree {
                 children = attributes + children,
                 offset = at,
                 nameSpan = nameSpan,
+                // Opening to closing tag, both included.
+                entrySpan = Span(at, index),
             )
         }
 
@@ -201,6 +205,7 @@ object XmlTree {
                         at + quoted.range.first + 1,
                         at + quoted.range.last,
                     ),
+                    entrySpan = Span(at + match.range.first, at + match.range.last + 1),
                 )
             }
             .toList()

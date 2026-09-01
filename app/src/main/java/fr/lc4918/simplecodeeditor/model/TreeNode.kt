@@ -36,6 +36,10 @@ data class Span(val start: Int, val end: Int)
  * that changing one of them is a matter of putting other characters in their
  * place rather than of writing the whole document out again. Writing it out
  * again would cost it its comments, its declaration and its layout.
+ *
+ * [entrySpan] is the whole of it, key and value together for a member of an
+ * object and opening to closing tag for an element, which is what moving,
+ * copying or dropping the node has to take hold of.
  */
 data class TreeNode(
     val name: String,
@@ -45,6 +49,7 @@ data class TreeNode(
     val offset: Int = 0,
     val nameSpan: Span? = null,
     val valueSpan: Span? = null,
+    val entrySpan: Span? = null,
 ) {
     val isContainer: Boolean
         get() = kind == NodeKind.OBJECT || kind == NodeKind.ARRAY || kind == NodeKind.ELEMENT

@@ -1,7 +1,8 @@
 package fr.lc4918.simplecodeeditor.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,10 +65,13 @@ fun TreeSurface(
     onToggle: (String) -> Unit,
     onNameTyped: (TreeNode, String) -> Unit,
     onValueTyped: (TreeNode, String) -> Unit,
+    canPaste: Boolean,
+    onAction: (TreeNode, TreeAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalEditorColors.current
     var editing by remember { mutableStateOf<Editing?>(null) }
+    var menuFor by remember { mutableStateOf<String?>(null) }
 
     if (root == null) {
         // The same ground as the document it stands in for, so an empty view
@@ -98,8 +102,20 @@ fun TreeSurface(
             TreeRow(
                 row = row,
                 editing = editing?.takeIf { it.path == row.path }?.field,
+                menuOpen = menuFor == row.path,
+                canPaste = canPaste,
                 onToggle = onToggle,
                 onEdit = { field -> editing = Editing(row.path, field) },
+                onOpenMenu = { menuFor = row.path },
+                onDismissMenu = { menuFor = null },
+                onAction = { action ->
+                    menuFor = null
+                    onAction(row.node, action)
+                },
+                onMenuEdit = { field ->
+                    menuFor = null
+                    editing = Editing(row.path, field)
+                },
                 onTyped = { field, typed ->
                     editing = null
                     when (field) {
@@ -126,12 +142,19 @@ private enum class Field { NAME, VALUE }
 
 private data class Editing(val path: String, val field: Field)
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TreeRow(
     row: TreeRow,
     editing: Field?,
+    menuOpen: Boolean,
+    canPaste: Boolean,
     onToggle: (String) -> Unit,
     onEdit: (Field) -> Unit,
+    onOpenMenu: () -> Unit,
+    onDismissMenu: () -> Unit,
+    onAction: (TreeAction) -> Unit,
+    onMenuEdit: (Field) -> Unit,
     onTyped: (Field, String) -> Unit,
 ) {
     val colors = LocalEditorColors.current
@@ -139,10 +162,24 @@ private fun TreeRow(
 
     Row(
         modifier = Modifier
+            // A long press is what a phone has where the editor this follows
+            // has a right click.
+            .combinedClickable(onLongClick = onOpenMenu, onClick = {})
             .padding(start = INDENT_PER_LEVEL * row.depth, top = 3.dp, bottom = 3.dp, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
+        if (menuOpen) {
+            TreeMenu(
+                node = node,
+                canPaste = canPaste,
+                onEditName = { onMenuEdit(Field.NAME) },
+                onEditValue = { onMenuEdit(Field.VALUE) },
+                onAction = onAction,
+                onDismiss = onDismissMenu,
+            )
+        }
+
         if (node.isContainer) {
             Icon(
                 imageVector = if (row.isOpen) {
@@ -154,7 +191,10 @@ private fun TreeRow(
                 tint = colors.gutterText,
                 modifier = Modifier
                     .size(18.dp)
-                    .clickable { onToggle(row.path) },
+                    .combinedClickable(
+                        onLongClick = onOpenMenu,
+                        onClick = { onToggle(row.path) },
+                    ),
             )
         } else {
             Box(Modifier.width(18.dp))
@@ -174,11 +214,16 @@ private fun TreeRow(
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.primary,
                     // An array names its children by their place, which is not
-                    // something to be renamed.
+                    // something to be renamed. The long press has to be given
+                    // to each part: one that took the tap and not the press
+                    // would swallow it and the menu would never open.
                     modifier = if (node.nameSpan == null) {
                         Modifier
                     } else {
-                        Modifier.clickable { onEdit(Field.NAME) }
+                        Modifier.combinedClickable(
+                            onLongClick = onOpenMenu,
+                            onClick = { onEdit(Field.NAME) },
+                        )
                     },
                 )
             }
@@ -189,7 +234,10 @@ private fun TreeRow(
                 text = node.summary(),
                 style = CodeTextStyle,
                 color = colors.gutterText,
-                modifier = Modifier.clickable { onToggle(row.path) },
+                modifier = Modifier.combinedClickable(
+                    onLongClick = onOpenMenu,
+                    onClick = { onToggle(row.path) },
+                ),
             )
 
             editing == Field.VALUE -> InlineField(
@@ -205,7 +253,10 @@ private fun TreeRow(
                 modifier = if (node.valueSpan == null) {
                     Modifier
                 } else {
-                    Modifier.clickable { onEdit(Field.VALUE) }
+                    Modifier.combinedClickable(
+                        onLongClick = onOpenMenu,
+                        onClick = { onEdit(Field.VALUE) },
+                    )
                 },
             )
         }

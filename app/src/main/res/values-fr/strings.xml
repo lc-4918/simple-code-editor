@@ -125,6 +125,21 @@
     <string name="problem_latitude_out_of_range">Une latitude va de -90 à 90</string>
     <string name="problem_position">Ligne %1$d, colonne %2$d</string>
 
+    <!-- What the menu of a node in the tree offers -->
+    <string name="tree_edit_key">Modifier la clé</string>
+    <string name="tree_edit_value">Modifier la valeur</string>
+    <string name="tree_cut">Couper</string>
+    <string name="tree_paste">Coller</string>
+    <string name="tree_duplicate">Dupliquer</string>
+    <string name="tree_extract">Extraire</string>
+    <string name="tree_remove">Supprimer</string>
+    <string name="tree_insert_before">Insérer avant</string>
+    <string name="tree_insert_after">Insérer après</string>
+    <string name="tree_insert_into">Insérer dedans</string>
+    <string name="tree_insert_object">Objet</string>
+    <string name="tree_insert_array">Tableau</string>
+    <string name="tree_insert_value">Valeur</string>
+
     <!-- Common -->
     <string name="action_cancel">Annuler</string>
     <string name="action_confirm">OK</string>

@@ -61,8 +61,13 @@ object JsonTree {
                     }
             }
             // The whole of what was read, quotes of a string included, which
-            // is what has to make way for another value.
-            return node.copy(nameSpan = nameSpan, valueSpan = Span(at, index))
+            // is what has to make way for another value; and, for a member of
+            // an object, the key and the value together.
+            return node.copy(
+                nameSpan = nameSpan,
+                valueSpan = Span(at, index),
+                entrySpan = Span(nameSpan?.start ?: at, index),
+            )
         }
 
         private fun readObject(name: String, at: Int): TreeNode {

@@ -36,6 +36,21 @@ and block folding.
   quotes. Renaming an XML element carries its closing tag along. An edit is one
   step in the history, and there is no separate way to cancel one: undoing is
   the way back.
+
+  A long press on a node opens what can be done to it, which is the gesture a
+  phone has where the editor this follows has a right click: edit the key or
+  the value, copy, cut, paste, duplicate, extract the subtree as the whole
+  document, remove, and insert an object, an array or a value before, after or
+  inside. Copying and pasting go through the clipboard of the system, so a
+  subtree travels to and from anywhere else. Each of these is one step in the
+  history, and each is a handful of characters moved in the document, the
+  punctuation between entries included: what surrounds the node keeps its
+  comments and its layout.
+
+  Sorting and transforming are not offered on a node. The toolbar sorts and
+  filters the whole document, and doing it to one branch would mean writing
+  that branch out again, which would cost it the layout every other move here
+  is careful to keep.
 - **Table** for CSV, which can be edited either as raw text or as a grid of
   rows and columns. The grid reads the first row as the column titles, keeps
   the quoting rules of the format on the way back out, and only quotes the

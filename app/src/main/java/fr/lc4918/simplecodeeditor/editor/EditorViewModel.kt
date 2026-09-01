@@ -20,6 +20,7 @@ import fr.lc4918.simplecodeeditor.format.GpxValidator
 import fr.lc4918.simplecodeeditor.format.JsonTransform
 import fr.lc4918.simplecodeeditor.format.KmlValidator
 import fr.lc4918.simplecodeeditor.format.TreeEdit
+import fr.lc4918.simplecodeeditor.format.TreeStructure
 import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.format.XmlTree
 import fr.lc4918.simplecodeeditor.format.diagnostic
@@ -34,6 +35,7 @@ import fr.lc4918.simplecodeeditor.model.Diagnostic
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.TreeNode
+import fr.lc4918.simplecodeeditor.ui.Where
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
@@ -334,6 +336,40 @@ class EditorViewModel(
     fun onTreeValueTyped(node: TreeNode, typed: String) {
         val state = _uiState.value
         val edited = TreeEdit.withValue(state.document.content, state.format, node, typed) ?: return
+        rewrite { edited }
+    }
+
+    /** The text of a node as it stands, which is what copying it hands over. */
+    fun textOf(node: TreeNode): String? =
+        TreeStructure.textOf(_uiState.value.document.content, node)
+
+    fun removeNode(node: TreeNode) {
+        applyToTree { content, format -> TreeStructure.remove(content, format, node) }
+    }
+
+    fun duplicateNode(node: TreeNode) {
+        applyToTree { content, format -> TreeStructure.duplicate(content, format, node) }
+    }
+
+    /** Keeps the subtree alone, as the whole document. */
+    fun extractNode(node: TreeNode) {
+        applyToTree { content, _ -> TreeStructure.extract(content, node) }
+    }
+
+    fun insertNode(node: TreeNode, where: Where, text: String) {
+        applyToTree { content, format ->
+            when (where) {
+                Where.BEFORE -> TreeStructure.insertBefore(content, format, node, text)
+                Where.AFTER -> TreeStructure.insertAfter(content, format, node, text)
+                Where.INTO -> TreeStructure.insertInto(content, format, node, text)
+            }
+        }
+    }
+
+    /** A move that has no meaning for the node leaves the document as it was. */
+    private fun applyToTree(move: (String, DocumentFormat) -> String?) {
+        val state = _uiState.value
+        val edited = move(state.document.content, state.format) ?: return
         rewrite { edited }
     }
 
