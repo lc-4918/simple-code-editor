@@ -1,3 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">SimpleCodeEditor</string>
+    <string name="app_name">Simple Code Editor</string>
+
+    <!-- Formats -->
+    <string name="format_json">JSON</string>
+    <string name="format_xml">XML</string>
+    <string name="format_html">HTML</string>
+    <string name="format_css">CSS</string>
+    <string name="format_javascript">JavaScript</string>
+    <string name="format_csv">CSV</string>
+    <string name="format_plain_text">Text</string>
+
+    <!-- View modes -->
+    <string name="mode_text">text</string>
+    <string name="mode_tree">tree</string>
+    <string name="mode_table">table</string>
+
+    <!-- Title bar -->
+    <string name="document_name">Document name</string>
+    <string name="action_new">New</string>
+    <string name="action_open">Open</string>
+    <string name="action_save">Save</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_full_screen">Full screen</string>
+    <string name="action_exit_full_screen">Exit full screen</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="open_from_device">Open from this device</string>
+    <string name="open_from_url">Open from a URL</string>
+    <string name="save_to_device">Save to this device</string>
+    <string name="save_to_cloud">Save to a cloud service</string>
+    <string name="save_to_url">Save to a URL</string>
+
+    <string name="copy_formatted">Copy formatted</string>
+    <string name="copy_compacted">Copy compacted</string>
+    <string name="copy_escaped">Copy escaped</string>
+    <string name="copy_as_is">Copy as is</string>
+
+    <!-- Toolbar -->
+    <string name="tool_indent">Format</string>
+    <string name="tool_compact">Compact</string>
+    <string name="tool_expand_all">Expand all</string>
+    <string name="tool_collapse_all">Collapse all</string>
+    <string name="tool_sort">Sort</string>
+    <string name="tool_filter">Filter</string>
+    <string name="tool_search">Search</string>
+    <string name="tool_undo">Undo</string>
+    <string name="tool_redo">Redo</string>
+
+    <!-- Settings -->
+    <string name="settings_theme">Theme</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_indentation">Indentation</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="language_system">System</string>
+    <string name="language_english">English</string>
+    <string name="language_french">French</string>
+    <string name="language_spanish">Spanish</string>
+
+    <!-- Common -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_confirm">OK</string>
+    <string name="action_close">Close</string>
 </resources>

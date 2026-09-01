@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple Code Editor</string>
+
+    <!-- Formats -->
+    <string name="format_plain_text">Texte</string>
+
+    <!-- View modes -->
+    <string name="mode_text">texte</string>
+    <string name="mode_tree">arbre</string>
+    <string name="mode_table">tableau</string>
+
+    <!-- Title bar -->
+    <string name="document_name">Nom du document</string>
+    <string name="action_new">Nouveau</string>
+    <string name="action_open">Ouvrir</string>
+    <string name="action_save">Enregistrer</string>
+    <string name="action_copy">Copier</string>
+    <string name="action_full_screen">Plein écran</string>
+    <string name="action_exit_full_screen">Quitter le plein écran</string>
+    <string name="action_settings">Paramètres</string>
+
+    <string name="open_from_device">Ouvrir depuis cet appareil</string>
+    <string name="open_from_url">Ouvrir depuis une URL</string>
+    <string name="save_to_device">Enregistrer sur cet appareil</string>
+    <string name="save_to_cloud">Enregistrer vers un service cloud</string>
+    <string name="save_to_url">Enregistrer vers une URL</string>
+
+    <string name="copy_formatted">Copier indenté</string>
+    <string name="copy_compacted">Copier compacté</string>
+    <string name="copy_escaped">Copier échappé</string>
+    <string name="copy_as_is">Copier tel quel</string>
+
+    <!-- Toolbar -->
+    <string name="tool_indent">Indenter</string>
+    <string name="tool_compact">Compacter</string>
+    <string name="tool_expand_all">Tout déplier</string>
+    <string name="tool_collapse_all">Tout replier</string>
+    <string name="tool_sort">Trier</string>
+    <string name="tool_filter">Filtrer</string>
+    <string name="tool_search">Rechercher</string>
+    <string name="tool_undo">Annuler</string>
+    <string name="tool_redo">Rétablir</string>
+
+    <!-- Settings -->
+    <string name="settings_theme">Thème</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_indentation">Indentation</string>
+    <string name="theme_system">Système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="language_system">Système</string>
+    <string name="language_english">Anglais</string>
+    <string name="language_french">Français</string>
+    <string name="language_spanish">Espagnol</string>
+
+    <!-- Common -->
+    <string name="action_cancel">Annuler</string>
+    <string name="action_confirm">OK</string>
+    <string name="action_close">Fermer</string>
+</resources>

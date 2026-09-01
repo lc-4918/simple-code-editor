@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Simple Code Editor</string>
+
+    <!-- Formats -->
+    <string name="format_plain_text">Texto</string>
+
+    <!-- View modes -->
+    <string name="mode_text">texto</string>
+    <string name="mode_tree">árbol</string>
+    <string name="mode_table">tabla</string>
+
+    <!-- Title bar -->
+    <string name="document_name">Nombre del documento</string>
+    <string name="action_new">Nuevo</string>
+    <string name="action_open">Abrir</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_copy">Copiar</string>
+    <string name="action_full_screen">Pantalla completa</string>
+    <string name="action_exit_full_screen">Salir de pantalla completa</string>
+    <string name="action_settings">Ajustes</string>
+
+    <string name="open_from_device">Abrir desde este dispositivo</string>
+    <string name="open_from_url">Abrir desde una URL</string>
+    <string name="save_to_device">Guardar en este dispositivo</string>
+    <string name="save_to_cloud">Guardar en un servicio en la nube</string>
+    <string name="save_to_url">Guardar en una URL</string>
+
+    <string name="copy_formatted">Copiar con formato</string>
+    <string name="copy_compacted">Copiar compactado</string>
+    <string name="copy_escaped">Copiar escapado</string>
+    <string name="copy_as_is">Copiar tal cual</string>
+
+    <!-- Toolbar -->
+    <string name="tool_indent">Formatear</string>
+    <string name="tool_compact">Compactar</string>
+    <string name="tool_expand_all">Expandir todo</string>
+    <string name="tool_collapse_all">Contraer todo</string>
+    <string name="tool_sort">Ordenar</string>
+    <string name="tool_filter">Filtrar</string>
+    <string name="tool_search">Buscar</string>
+    <string name="tool_undo">Deshacer</string>
+    <string name="tool_redo">Rehacer</string>
+
+    <!-- Settings -->
+    <string name="settings_theme">Tema</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_indentation">Sangría</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="language_system">Sistema</string>
+    <string name="language_english">Inglés</string>
+    <string name="language_french">Francés</string>
+    <string name="language_spanish">Español</string>
+
+    <!-- Common -->
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_confirm">Aceptar</string>
+    <string name="action_close">Cerrar</string>
+</resources>

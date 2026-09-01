@@ -1,0 +1,182 @@
+package fr.lc4918.simplecodeeditor.editor
+
+import android.app.Application
+import android.os.SystemClock
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import fr.lc4918.simplecodeeditor.data.DataStoreSettingsRepository
+import fr.lc4918.simplecodeeditor.data.SettingsRepository
+import fr.lc4918.simplecodeeditor.format.FormatDetector
+import fr.lc4918.simplecodeeditor.model.AppLanguage
+import fr.lc4918.simplecodeeditor.model.DocumentFormat
+import fr.lc4918.simplecodeeditor.model.EditorDocument
+import fr.lc4918.simplecodeeditor.model.ThemeOption
+import fr.lc4918.simplecodeeditor.model.ViewMode
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+/** Holds the open document and the user settings for the editor screen. */
+class EditorViewModel(
+    private val settings: SettingsRepository,
+    private val clock: () -> Long = SystemClock::elapsedRealtime,
+) : ViewModel() {
+
+    private val undoStack = UndoStack()
+    /** Null until the first edit, so the opening state is always recorded. */
+    private var lastRecordedAt: Long? = null
+
+    private val _uiState = MutableStateFlow(EditorUiState())
+    val uiState: StateFlow<EditorUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            settings.theme.collect { option -> _uiState.update { it.copy(theme = option) } }
+        }
+        viewModelScope.launch {
+            settings.language.collect { value -> _uiState.update { it.copy(language = value) } }
+        }
+        viewModelScope.launch {
+            settings.indentWidth.collect { width -> _uiState.update { it.copy(indentWidth = width) } }
+        }
+    }
+
+    // Document editing
+
+    fun onContentChanged(content: String) {
+        val current = _uiState.value
+        if (current.document.content == content) return
+
+        val now = clock()
+        val previousRecord = lastRecordedAt
+        if (previousRecord == null || now - previousRecord > UNDO_COALESCE_MILLIS) {
+            undoStack.record(current.document.content)
+            lastRecordedAt = now
+        }
+
+        _uiState.update {
+            it.copy(
+                document = it.document.copy(content = content, isModified = true),
+                canUndo = undoStack.canUndo,
+                canRedo = undoStack.canRedo,
+            )
+        }
+    }
+
+    fun onDocumentNameChanged(name: String) {
+        val trimmed = name.trim().ifEmpty { EditorDocument.DEFAULT_NAME }
+        _uiState.update { state ->
+            val extension = trimmed.substringAfterLast('.', "")
+            val format = DocumentFormat.fromExtension(extension) ?: state.document.format
+            state.copy(document = state.document.copy(name = trimmed, format = format))
+                .coerceViewMode()
+        }
+    }
+
+    /** Replaces the whole document, for instance after an open or a new action. */
+    fun setDocument(document: EditorDocument) {
+        undoStack.clear()
+        lastRecordedAt = null
+        _uiState.update {
+            it.copy(document = document, canUndo = false, canRedo = false).coerceViewMode()
+        }
+    }
+
+    fun newDocument(format: DocumentFormat = DocumentFormat.JSON) {
+        setDocument(EditorDocument.empty(format))
+    }
+
+    /** Re-runs format detection on the current content, ignoring the file name. */
+    fun redetectFormat() {
+        _uiState.update { state ->
+            val detected = FormatDetector.detectFromContent(state.document.content)
+            state.copy(document = state.document.copy(format = detected)).coerceViewMode()
+        }
+    }
+
+    // History
+
+    fun undo() {
+        val current = _uiState.value.document.content
+        val restored = undoStack.undo(current) ?: return
+        lastRecordedAt = null
+        _uiState.update {
+            it.copy(
+                document = it.document.copy(content = restored, isModified = true),
+                canUndo = undoStack.canUndo,
+                canRedo = undoStack.canRedo,
+            )
+        }
+    }
+
+    fun redo() {
+        val current = _uiState.value.document.content
+        val restored = undoStack.redo(current) ?: return
+        lastRecordedAt = null
+        _uiState.update {
+            it.copy(
+                document = it.document.copy(content = restored, isModified = true),
+                canUndo = undoStack.canUndo,
+                canRedo = undoStack.canRedo,
+            )
+        }
+    }
+
+    // View state
+
+    fun setViewMode(mode: ViewMode) {
+        if (!_uiState.value.capabilities.supports(mode)) return
+        _uiState.update { it.copy(viewMode = mode) }
+    }
+
+    fun toggleFullScreen() {
+        _uiState.update { it.copy(isFullScreen = !it.isFullScreen) }
+    }
+
+    fun setSearchVisible(visible: Boolean) {
+        _uiState.update {
+            it.copy(isSearchVisible = visible, searchQuery = if (visible) it.searchQuery else "")
+        }
+    }
+
+    fun setSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    // Settings
+
+    fun setTheme(option: ThemeOption) {
+        viewModelScope.launch { settings.setTheme(option) }
+    }
+
+    fun setLanguage(language: AppLanguage) {
+        viewModelScope.launch { settings.setLanguage(language) }
+    }
+
+    fun setIndentWidth(width: Int) {
+        viewModelScope.launch { settings.setIndentWidth(width) }
+    }
+
+    /** Falls back to the text mode when the current one is not offered by the format. */
+    private fun EditorUiState.coerceViewMode(): EditorUiState =
+        if (capabilities.supports(viewMode)) this else copy(viewMode = ViewMode.TEXT)
+
+    companion object {
+        /** Keystrokes closer together than this share a single undo entry. */
+        const val UNDO_COALESCE_MILLIS = 700L
+
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = checkNotNull(
+                    this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
+                )
+                EditorViewModel(DataStoreSettingsRepository(application))
+            }
+        }
+    }
+}
