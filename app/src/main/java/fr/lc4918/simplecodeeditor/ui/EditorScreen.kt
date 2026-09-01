@@ -133,6 +133,8 @@ fun EditorScreen(
                     onToggle = { path ->
                         collapsed = if (path in collapsed) collapsed - path else collapsed + path
                     },
+                    onNameTyped = actions.onTreeNameTyped,
+                    onValueTyped = actions.onTreeValueTyped,
                 )
             }
         }

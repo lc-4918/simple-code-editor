@@ -8,6 +8,7 @@ import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.DocumentSource
+import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.SortDirection
@@ -485,6 +486,57 @@ class EditorViewModelTest {
                 model.uiState.value.diagnostic?.problem,
             )
         }
+
+    @Test
+    fun `editing a value in the tree changes the document and nothing else`() =
+        runTest(dispatcher) {
+            val source = "{\n  \"a\": 1,\n  \"b\": 2\n}"
+            val model = viewModel()
+            model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+            val node = JsonTree.parse(source)!!.children.first { it.name == "a" }
+            model.onTreeValueTyped(node, "9")
+
+            assertEquals("{\n  \"a\": 9,\n  \"b\": 2\n}", model.uiState.value.document.content)
+        }
+
+    @Test
+    fun `editing in the tree is one step in the history`() = runTest(dispatcher) {
+        val source = """{"a":1}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        val node = JsonTree.parse(source)!!.children.single()
+        model.onTreeValueTyped(node, "hello")
+        assertEquals("""{"a":"hello"}""", model.uiState.value.document.content)
+
+        model.undo()
+        assertEquals(source, model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `renaming a key in the tree keeps the value`() = runTest(dispatcher) {
+        val source = """{"a":1,"b":2}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        val node = JsonTree.parse(source)!!.children.first { it.name == "a" }
+        model.onTreeNameTyped(node, "z")
+
+        assertEquals("""{"z":1,"b":2}""", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a node with nowhere to write leaves the document alone`() = runTest(dispatcher) {
+        val source = """{"a":{"b":1}}"""
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = source))
+
+        val container = JsonTree.parse(source)!!.children.single()
+        model.onTreeValueTyped(container, "9")
+
+        assertEquals(source, model.uiState.value.document.content)
+    }
 
     @Test
     fun `theme changes are persisted and reflected in the state`() = runTest(dispatcher) {

@@ -24,8 +24,18 @@ and block folding.
 - **Tree** for the nested formats, JSON and XML. Branches open and close one
   by one or all at once, XML attributes hang under their element marked with a
   leading sign, and a document that does not read cleanly says so rather than
-  showing half of itself. The tree reads the document; editing stays in text
-  mode, where the whole document is at hand.
+  showing half of itself.
+
+  A name or a value is edited by tapping it, which is the gesture a phone has
+  where the editor this follows has a double click. What is typed is written
+  into the document in place of the few characters the name or the value
+  occupied, and nothing else is touched: comments, declaration and layout come
+  through an edit unchanged. The type of a JSON value follows what is typed,
+  so a value becomes a number, a boolean or null by being written as one; text
+  that would be read as one of those and is meant as a string is typed between
+  quotes. Renaming an XML element carries its closing tag along. An edit is one
+  step in the history, and there is no separate way to cancel one: undoing is
+  the way back.
 - **Table** for CSV, which can be edited either as raw text or as a grid of
   rows and columns. The grid reads the first row as the column titles, keeps
   the quoting rules of the format on the way back out, and only quotes the

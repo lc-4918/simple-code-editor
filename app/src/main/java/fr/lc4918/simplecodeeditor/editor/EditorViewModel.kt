@@ -19,6 +19,7 @@ import fr.lc4918.simplecodeeditor.format.GeoJsonValidator
 import fr.lc4918.simplecodeeditor.format.GpxValidator
 import fr.lc4918.simplecodeeditor.format.JsonTransform
 import fr.lc4918.simplecodeeditor.format.KmlValidator
+import fr.lc4918.simplecodeeditor.format.TreeEdit
 import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.format.XmlTree
 import fr.lc4918.simplecodeeditor.format.diagnostic
@@ -314,6 +315,26 @@ class EditorViewModel(
         if (rewritten == state.document.content) return
         lastRecordedAt = null
         onContentChanged(rewritten)
+    }
+
+    // Hierarchy
+
+    /**
+     * Sets the name of one node, in the document rather than over it.
+     *
+     * A name or a value that changes nothing, or that has nowhere in the
+     * document to be written, leaves the document as it was.
+     */
+    fun onTreeNameTyped(node: TreeNode, typed: String) {
+        val state = _uiState.value
+        val edited = TreeEdit.withName(state.document.content, state.format, node, typed) ?: return
+        rewrite { edited }
+    }
+
+    fun onTreeValueTyped(node: TreeNode, typed: String) {
+        val state = _uiState.value
+        val edited = TreeEdit.withValue(state.document.content, state.format, node, typed) ?: return
+        rewrite { edited }
     }
 
     // Table

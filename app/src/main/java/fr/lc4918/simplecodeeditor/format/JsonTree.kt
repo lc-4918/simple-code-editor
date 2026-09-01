@@ -1,6 +1,7 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.NodeKind
+import fr.lc4918.simplecodeeditor.model.Span
 import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
@@ -41,10 +42,10 @@ object JsonTree {
             while (index < text.length && text[index].isWhitespace()) index++
         }
 
-        fun readValue(name: String): TreeNode {
+        fun readValue(name: String, nameSpan: Span? = null): TreeNode {
             skipWhitespace()
             val at = index
-            return when (val character = peek()) {
+            val node = when (val character = peek()) {
                 '{' -> readObject(name, at)
                 '[' -> readArray(name, at)
                 '"' -> TreeNode(name, NodeKind.STRING, readString(), offset = at)
@@ -59,6 +60,9 @@ object JsonTree {
                         refuse(DocumentProblem.UNEXPECTED_CHARACTER)
                     }
             }
+            // The whole of what was read, quotes of a string included, which
+            // is what has to make way for another value.
+            return node.copy(nameSpan = nameSpan, valueSpan = Span(at, index))
         }
 
         private fun readObject(name: String, at: Int): TreeNode {
@@ -71,10 +75,12 @@ object JsonTree {
             }
             while (true) {
                 skipWhitespace()
+                val keyAt = index
                 val key = readString()
+                val keySpan = Span(keyAt, index)
                 skipWhitespace()
                 expect(':')
-                children.add(readValue(key))
+                children.add(readValue(key, keySpan))
                 skipWhitespace()
                 when (peek()) {
                     ',' -> index++

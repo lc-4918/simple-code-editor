@@ -9,6 +9,7 @@ import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.OpenSource
 import fr.lc4918.simplecodeeditor.model.SaveTarget
 import fr.lc4918.simplecodeeditor.model.SortDirection
+import fr.lc4918.simplecodeeditor.model.TreeNode
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
 
@@ -31,6 +32,8 @@ class EditorActions(
     val onViewModeSelected: (ViewMode) -> Unit,
     val onTool: (EditorTool) -> Unit,
     val onRepaired: (String?) -> Unit,
+    val onTreeNameTyped: (TreeNode, String) -> Unit,
+    val onTreeValueTyped: (TreeNode, String) -> Unit,
     val onCellChanged: (row: Int, column: Int, value: String) -> Unit,
     val onAddRow: () -> Unit,
     val onSort: (column: Int, direction: SortDirection) -> Unit,

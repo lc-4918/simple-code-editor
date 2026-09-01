@@ -1,6 +1,7 @@
 package fr.lc4918.simplecodeeditor.format
 
 import fr.lc4918.simplecodeeditor.model.NodeKind
+import fr.lc4918.simplecodeeditor.model.Span
 import fr.lc4918.simplecodeeditor.model.DocumentProblem
 import fr.lc4918.simplecodeeditor.model.TreeNode
 
@@ -94,9 +95,18 @@ object XmlTree {
             val end = text.indexOf('<', index).takeIf { it >= 0 } ?: text.length
             val raw = text.substring(index, end)
             index = end
-            return raw.trim()
-                .takeIf { it.isNotEmpty() }
-                ?.let { TreeNode(name = "", kind = NodeKind.TEXT, value = it, offset = at) }
+            val trimmed = raw.trim()
+            if (trimmed.isEmpty()) return null
+            // The span skips the whitespace the trimming dropped, so that
+            // replacing the text leaves the layout around it alone.
+            val start = at + raw.indexOf(trimmed)
+            return TreeNode(
+                name = "",
+                kind = NodeKind.TEXT,
+                value = trimmed,
+                offset = at,
+                valueSpan = Span(start, start + trimmed.length),
+            )
         }
 
         private fun readElement(): TreeNode {
@@ -106,6 +116,8 @@ object XmlTree {
             index = end + 1
 
             val name = tagName(tag)
+            // Just past the opening bracket, which is where the name is written.
+            val nameSpan = Span(at + 1, at + 1 + name.length)
             val attributes = attributesOf(tag, at)
             val selfContained =
                 tag.endsWith("/>") || (html && name.lowercase() in VOID_ELEMENTS)
@@ -116,6 +128,7 @@ object XmlTree {
                 kind = NodeKind.ELEMENT,
                 children = attributes + children,
                 offset = at,
+                nameSpan = nameSpan,
             )
         }
 
@@ -166,15 +179,28 @@ object XmlTree {
         tag.trimStart('<').takeWhile { !it.isWhitespace() && it != '>' && it != '/' }
 
     private fun attributesOf(tag: String, at: Int): List<TreeNode> {
-        val body = tag.trim('<', '>', '/').substringAfter(tagName(tag), missingDelimiterValue = "")
+        // Searched in the tag itself rather than in a trimmed copy, so that
+        // the places the matches report are places in the document.
+        val nameLength = tagName(tag).length
         return Regex("""([\w:.-]+)\s*=\s*("([^"]*)"|'([^']*)')""")
-            .findAll(body)
+            .findAll(tag, startIndex = 1 + nameLength)
             .map { match ->
+                val nameGroup = match.groups[1]!!
+                val quoted = match.groups[2]!!
                 TreeNode(
                     name = ATTRIBUTE_PREFIX + match.groupValues[1],
                     kind = NodeKind.ATTRIBUTE,
                     value = match.groupValues[3].ifEmpty { match.groupValues[4] },
-                    offset = at,
+                    offset = at + match.range.first,
+                    nameSpan = Span(
+                        at + nameGroup.range.first,
+                        at + nameGroup.range.last + 1,
+                    ),
+                    // Inside the quotes, which stay where they are.
+                    valueSpan = Span(
+                        at + quoted.range.first + 1,
+                        at + quoted.range.last,
+                    ),
                 )
             }
             .toList()

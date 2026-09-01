@@ -19,6 +19,9 @@ enum class NodeKind {
     ATTRIBUTE,
 }
 
+/** Where something sits in the document it was read from. */
+data class Span(val start: Int, val end: Int)
+
 /**
  * One line of the hierarchical view.
  *
@@ -28,6 +31,11 @@ enum class NodeKind {
  *
  * [offset] is where the node starts in the document it was read from, which is
  * what lets a rule broken deep inside a tree be pointed at in the text.
+ *
+ * [nameSpan] and [valueSpan] are where its name and its value are written, so
+ * that changing one of them is a matter of putting other characters in their
+ * place rather than of writing the whole document out again. Writing it out
+ * again would cost it its comments, its declaration and its layout.
  */
 data class TreeNode(
     val name: String,
@@ -35,6 +43,8 @@ data class TreeNode(
     val value: String? = null,
     val children: List<TreeNode> = emptyList(),
     val offset: Int = 0,
+    val nameSpan: Span? = null,
+    val valueSpan: Span? = null,
 ) {
     val isContainer: Boolean
         get() = kind == NodeKind.OBJECT || kind == NodeKind.ARRAY || kind == NodeKind.ELEMENT
