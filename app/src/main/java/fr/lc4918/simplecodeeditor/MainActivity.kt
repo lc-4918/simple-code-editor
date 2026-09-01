@@ -12,7 +12,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
@@ -166,6 +168,14 @@ class MainActivity : AppCompatActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) },
+                    // Nothing is kept clear of the system bars in full screen,
+                    // since they are not there: leaving the room they take
+                    // would give the document a band of nothing instead.
+                    contentWindowInsets = if (state.isFullScreen) {
+                        WindowInsets(0)
+                    } else {
+                        ScaffoldDefaults.contentWindowInsets
+                    },
                 ) { innerPadding ->
                     EditorScreen(
                         state = state,

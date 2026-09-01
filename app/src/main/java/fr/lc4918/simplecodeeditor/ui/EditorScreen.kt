@@ -1,5 +1,6 @@
 package fr.lc4918.simplecodeeditor.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,27 +55,34 @@ fun EditorScreen(
         }
     }
 
+    // In full screen the document takes the whole screen: the system bars are
+    // hidden by the activity and the title bar steps aside, leaving the
+    // toolbar, which is the row that is worked with.
+    BackHandler(enabled = state.isFullScreen, onBack = actions.onToggleFullScreen)
+
     Column(modifier = modifier.fillMaxSize()) {
-        EditorTitleBar(
-            documentName = state.document.name,
-            isFullScreen = state.isFullScreen,
-            onDocumentNameChanged = actions.onDocumentNameChanged,
-            onNew = actions.onNew,
-            // An address is asked for here, because it is a question to the
-            // user rather than a trip through the storage picker.
-            onOpen = { source ->
-                if (source == OpenSource.URL) urlPrompt = UrlPrompt.OPEN else actions.onOpen(source)
-            },
-            onSave = { target ->
-                if (target == SaveTarget.URL) urlPrompt = UrlPrompt.SAVE else actions.onSave(target)
-            },
-            onCopy = actions.onCopy,
-            onToggleFullScreen = actions.onToggleFullScreen,
-            onSettings = { settingsVisible = true },
-        )
+        if (!state.isFullScreen) {
+            EditorTitleBar(
+                documentName = state.document.name,
+                onDocumentNameChanged = actions.onDocumentNameChanged,
+                onNew = actions.onNew,
+                // An address is asked for here, because it is a question to the
+                // user rather than a trip through the storage picker.
+                onOpen = { source ->
+                    if (source == OpenSource.URL) urlPrompt = UrlPrompt.OPEN else actions.onOpen(source)
+                },
+                onSave = { target ->
+                    if (target == SaveTarget.URL) urlPrompt = UrlPrompt.SAVE else actions.onSave(target)
+                },
+                onCopy = actions.onCopy,
+                onToggleFullScreen = actions.onToggleFullScreen,
+                onSettings = { settingsVisible = true },
+            )
+        }
         EditorToolbar(
             state = state,
             onViewModeSelected = actions.onViewModeSelected,
+            onExitFullScreen = actions.onToggleFullScreen,
             onTool = { tool ->
                 val tree = treeRoot
                 when {
