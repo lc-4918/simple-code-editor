@@ -66,10 +66,16 @@ fun CsvTableSurface(
     val table = remember(content, fallbackDelimiter) { CsvParser.parse(content, fallbackDelimiter) }
 
     if (table == null) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // The same ground as the document it stands in for, so an empty view
+        // still reads as part of the editor.
+        Box(
+            modifier = modifier.fillMaxSize().background(colors.codeBackground),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 text = stringResource(R.string.table_not_readable),
                 style = MaterialTheme.typography.bodyMedium,
+                color = colors.codeText,
             )
         }
         return

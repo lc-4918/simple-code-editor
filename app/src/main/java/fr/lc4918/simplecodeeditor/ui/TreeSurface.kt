@@ -50,10 +50,16 @@ fun TreeSurface(
     val colors = LocalEditorColors.current
 
     if (root == null) {
-        Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        // The same ground as the document it stands in for, so an empty view
+        // still reads as part of the editor.
+        Box(
+            modifier = modifier.fillMaxSize().background(colors.codeBackground),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
                 text = stringResource(R.string.tree_not_readable),
                 style = MaterialTheme.typography.bodyMedium,
+                color = colors.codeText,
             )
         }
         return
