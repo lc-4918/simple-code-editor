@@ -9,9 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import fr.lc4918.simplecodeeditor.editor.EditorTool
+import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
 import fr.lc4918.simplecodeeditor.format.CsvParser
+import fr.lc4918.simplecodeeditor.format.JsonTransform
 import fr.lc4918.simplecodeeditor.format.JsonTree
 import fr.lc4918.simplecodeeditor.format.XmlTree
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
@@ -51,16 +54,6 @@ fun EditorScreen(
         }
     }
 
-    // Read once per document, and only for the format that has columns.
-    val columnNames = remember(state.format, state.document.content) {
-        if (state.format != DocumentFormat.CSV) {
-            null
-        } else {
-            CsvParser.parse(state.document.content)
-                ?.let { table -> List(table.columnCount, table::columnName) }
-        }
-    }
-
     Column(modifier = modifier.fillMaxSize()) {
         EditorTitleBar(
             documentName = state.document.name,
@@ -94,9 +87,8 @@ fun EditorScreen(
                     tool == EditorTool.COLLAPSE_ALL -> editor.foldAll()
                     tool == EditorTool.EXPAND_ALL -> editor.unfoldAll()
                     // Both ask which column to work on before they run.
-                    tool == EditorTool.SORT && columnNames != null -> tablePrompt = TablePrompt.SORT
-                    tool == EditorTool.FILTER && columnNames != null ->
-                        tablePrompt = TablePrompt.FILTER
+                    tool == EditorTool.SORT -> tablePrompt = TablePrompt.SORT
+                    tool == EditorTool.FILTER -> tablePrompt = TablePrompt.FILTER
 
                     else -> actions.onTool(tool)
                 }
@@ -144,10 +136,13 @@ fun EditorScreen(
         )
     }
 
-    if (columnNames != null) {
-        when (tablePrompt) {
+    tablePrompt?.let { prompt ->
+        // Read here rather than with the document, so that a large one is not
+        // parsed again on every keystroke just to fill a dialog.
+        val names = fieldNames(state, stringResource(R.string.field_value))
+        when (prompt) {
             TablePrompt.SORT -> SortDialog(
-                columns = columnNames,
+                columns = names,
                 onConfirm = { column, direction ->
                     tablePrompt = null
                     actions.onSort(column, direction)
@@ -156,15 +151,13 @@ fun EditorScreen(
             )
 
             TablePrompt.FILTER -> FilterDialog(
-                columns = columnNames,
+                columns = names,
                 onConfirm = { column, operator, value ->
                     tablePrompt = null
                     actions.onFilter(column, operator, value)
                 },
                 onDismiss = { tablePrompt = null },
             )
-
-            null -> Unit
         }
     }
 
@@ -183,4 +176,24 @@ fun EditorScreen(
 
 /** Which of the two questions about the columns is being asked. */
 private enum class TablePrompt { SORT, FILTER }
+
+/**
+ * The names the sort and filter dialogs offer.
+ *
+ * A grid offers its columns, a JSON array the members its elements share, and
+ * anything else the value itself, which is what an array of plain values and
+ * an object of keys are both sorted on.
+ */
+@Composable
+private fun fieldNames(state: EditorUiState, valueLabel: String): List<String> =
+    remember(state.format, state.document.content, valueLabel) {
+        val content = state.document.content
+        when (state.format) {
+            DocumentFormat.CSV ->
+                CsvParser.parse(content)?.let { table -> List(table.columnCount, table::columnName) }
+
+            DocumentFormat.JSON -> JsonTree.parse(content)?.let(JsonTransform::fields)
+            else -> null
+        }?.ifEmpty { null } ?: listOf(valueLabel)
+    }
 

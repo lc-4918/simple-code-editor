@@ -14,11 +14,15 @@ import fr.lc4918.simplecodeeditor.data.SettingsRepository
 import fr.lc4918.simplecodeeditor.format.CsvParser
 import fr.lc4918.simplecodeeditor.format.CsvTransform
 import fr.lc4918.simplecodeeditor.format.DocumentFormatter
+import fr.lc4918.simplecodeeditor.format.JsonTransform
+import fr.lc4918.simplecodeeditor.format.JsonTree
+import fr.lc4918.simplecodeeditor.format.JsonWriter
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CsvTable
 import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.SortDirection
+import fr.lc4918.simplecodeeditor.model.TreeNode
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
@@ -214,8 +218,9 @@ class EditorViewModel(
     /**
      * Runs a tool of the second toolbar row.
      *
-     * Folding is run by the editing surface, which owns the fold state, so it
-     * never reaches here.
+     * Folding, sorting and filtering never reach here: the screen takes them
+     * first, since it holds the fold state and asks the questions the last two
+     * need answered before they can run.
      */
     fun onTool(tool: EditorTool) {
         when (tool) {
@@ -263,13 +268,50 @@ class EditorViewModel(
         rewriteTable { table -> table.copy(rows = table.rows + listOf(List(table.columnCount) { "" })) }
     }
 
-    fun sortRows(column: Int, direction: SortDirection) {
-        rewriteTable { table -> CsvTransform.sort(table, column, direction) }
+    /**
+     * Reorders the document, by column for a grid and by member for a tree.
+     *
+     * The dialog hands back which of the offered names was chosen, which is a
+     * column for CSV and a member of the elements for JSON.
+     */
+    fun sort(chosen: Int, direction: SortDirection) {
+        when (_uiState.value.format) {
+            DocumentFormat.CSV ->
+                rewriteTable { table -> CsvTransform.sort(table, chosen, direction) }
+
+            DocumentFormat.JSON ->
+                rewriteJson(chosen) { root, field -> JsonTransform.sort(root, field, direction) }
+
+            else -> Unit
+        }
     }
 
-    /** Drops every row the filter does not keep, which one undo brings back. */
-    fun filterRows(column: Int, operator: FilterOperator, value: String) {
-        rewriteTable { table -> CsvTransform.filter(table, column, operator, value) }
+    /** Drops what the filter does not keep, which one undo brings back. */
+    fun filter(chosen: Int, operator: FilterOperator, value: String) {
+        when (_uiState.value.format) {
+            DocumentFormat.CSV ->
+                rewriteTable { table -> CsvTransform.filter(table, chosen, operator, value) }
+
+            DocumentFormat.JSON -> rewriteJson(chosen) { root, field ->
+                JsonTransform.filter(root, field, operator, value)
+            }
+
+            else -> Unit
+        }
+    }
+
+    /**
+     * Reads the document as a tree, transforms it, and writes it back.
+     *
+     * A document written on one line is written back on one line, so that
+     * sorting does not quietly lay out a compact document.
+     */
+    private fun rewriteJson(chosen: Int, transform: (TreeNode, String?) -> TreeNode) {
+        val state = _uiState.value
+        val root = JsonTree.parse(state.document.content) ?: return
+        val field = JsonTransform.fields(root).getOrNull(chosen)
+        val width = if (state.document.content.contains('\n')) state.indentWidth else null
+        rewrite { JsonWriter.write(transform(root, field), width) }
     }
 
     private fun rewriteTable(transform: (CsvTable) -> CsvTable) {

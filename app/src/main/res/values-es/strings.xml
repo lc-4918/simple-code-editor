@@ -67,6 +67,7 @@
     <string name="label_column">Columna</string>
     <string name="label_direction">Sentido</string>
     <string name="label_value">Valor</string>
+    <string name="field_value">valor</string>
     <string name="sort_ascending">Ascendente</string>
     <string name="sort_descending">Descendente</string>
     <string name="filter_contains">contiene</string>

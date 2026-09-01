@@ -31,8 +31,11 @@ and block folding.
   the quoting rules of the format on the way back out, and only quotes the
   fields that need it.
 
-Sort and filter ask which column to work on. Both rewrite the document, so a
-filter that drops rows is undone in one step like any other edit.
+Sort and filter ask what to work on: a column for CSV, and for JSON the member
+its elements share, or the values themselves when they have none. An object is
+sorted and filtered by its keys. Both rewrite the document, so a filter that
+drops rows is undone in one step like any other edit, and a JSON document
+written on one line is written back on one line.
 
 The second toolbar row adapts to the open document: a tool that has no meaning
 for the current format, such as the table mode on an HTML file, is not offered.

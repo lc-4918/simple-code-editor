@@ -73,6 +73,7 @@
     <string name="label_column">Column</string>
     <string name="label_direction">Direction</string>
     <string name="label_value">Value</string>
+    <string name="field_value">value</string>
     <string name="sort_ascending">Ascending</string>
     <string name="sort_descending">Descending</string>
     <string name="filter_contains">contains</string>

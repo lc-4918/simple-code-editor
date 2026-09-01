@@ -232,7 +232,7 @@ class EditorViewModelTest {
             EditorDocument.empty(DocumentFormat.CSV).copy(content = "n,s\nada,9\nlinus,10"),
         )
 
-        model.sortRows(column = 1, direction = SortDirection.DESCENDING)
+        model.sort(chosen = 1, direction = SortDirection.DESCENDING)
 
         assertEquals("n,s\nlinus,10\nada,9", model.uiState.value.document.content)
     }
@@ -244,7 +244,7 @@ class EditorViewModelTest {
             EditorDocument.empty(DocumentFormat.CSV).copy(content = "n,s\nada,9\nlinus,10"),
         )
 
-        model.filterRows(column = 0, operator = FilterOperator.CONTAINS, value = "ada")
+        model.filter(chosen = 0, operator = FilterOperator.CONTAINS, value = "ada")
         assertEquals("n,s\nada,9", model.uiState.value.document.content)
 
         model.undo()
@@ -259,6 +259,47 @@ class EditorViewModelTest {
         model.addRow()
 
         assertEquals("", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `sorting a JSON array uses the member the dialog offered`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.JSON)
+                .copy(content = """[{"n":"b","s":9},{"n":"a","s":10}]"""),
+        )
+
+        model.sort(chosen = 0, direction = SortDirection.ASCENDING)
+
+        assertEquals(
+            """[{"n":"a","s":10},{"n":"b","s":9}]""",
+            model.uiState.value.document.content,
+        )
+    }
+
+    @Test
+    fun `filtering a JSON array drops the elements that do not match`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.JSON)
+                .copy(content = """[{"n":"ada"},{"n":"linus"}]"""),
+        )
+
+        model.filter(chosen = 0, operator = FilterOperator.CONTAINS, value = "ada")
+
+        assertEquals("""[{"n":"ada"}]""", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a laid out JSON document stays laid out after a sort`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.JSON).copy(content = "[\n  2,\n  1\n]"),
+        )
+
+        model.sort(chosen = 0, direction = SortDirection.ASCENDING)
+
+        assertEquals("[\n  1,\n  2\n]", model.uiState.value.document.content)
     }
 
     @Test
