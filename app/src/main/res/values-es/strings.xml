@@ -54,14 +54,22 @@
     <string name="language_french">Francés</string>
     <string name="language_spanish">Español</string>
 
+    <!-- Opening and saving -->
+    <string name="url_address">Dirección</string>
+    <string name="url_hint">https://ejemplo.es/datos.json</string>
+    <string name="status_saved">Documento guardado</string>
+    <string name="error_open">No se ha podido abrir el documento</string>
+    <string name="error_save">No se ha podido guardar el documento</string>
+    <string name="error_invalid_url">Introduce una dirección segura, que empiece por https://</string>
+
     <!-- Search panel of the editing surface -->
     <string name="search_find">Buscar</string>
     <string name="search_replace_field">Reemplazar</string>
     <string name="search_next">siguiente</string>
     <string name="search_previous">anterior</string>
     <string name="search_all">todo</string>
-    <string name="search_match_case">distinguir mayusculas</string>
-    <string name="search_regexp">expresion</string>
+    <string name="search_match_case">distinguir mayúsculas</string>
+    <string name="search_regexp">expresión</string>
     <string name="search_by_word">palabra completa</string>
     <string name="search_replace">reemplazar</string>
     <string name="search_replace_all">reemplazar todo</string>

@@ -1,7 +1,11 @@
 package fr.lc4918.simplecodeeditor.editor
 
+import fr.lc4918.simplecodeeditor.R
+import fr.lc4918.simplecodeeditor.fake.FakeDocumentRepository
 import fr.lc4918.simplecodeeditor.fake.FakeSettingsRepository
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
+import fr.lc4918.simplecodeeditor.model.DocumentLocation
+import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
@@ -22,10 +26,12 @@ import org.junit.Test
 class EditorViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
+    private val documents = FakeDocumentRepository()
     private var now = 0L
 
     private fun viewModel() = EditorViewModel(
         settings = FakeSettingsRepository(),
+        documents = documents,
         clock = { now },
     )
 
@@ -178,6 +184,90 @@ class EditorViewModelTest {
 
         dispatcher.scheduler.advanceUntilIdle()
         assertTrue(model.uiState.value.isLanguageLoaded)
+    }
+
+    @Test
+    fun `opening reads the content and works out the format from the name`() = runTest(dispatcher) {
+        val location = DocumentLocation("content://documents/1")
+        documents.stored[location.value] = DocumentSource(
+            name = "track.gpx",
+            mimeType = null,
+            content = "<gpx></gpx>",
+        )
+
+        val model = viewModel()
+        model.open(location)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        val state = model.uiState.value
+        assertEquals("<gpx></gpx>", state.document.content)
+        assertEquals("track", state.document.name)
+        assertEquals(DocumentFormat.XML, state.format)
+        assertEquals(location, state.document.origin)
+        assertFalse(state.document.isModified)
+    }
+
+    @Test
+    fun `a document that fails to open leaves the current one alone`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onContentChanged("kept")
+
+        model.open(DocumentLocation("content://documents/missing"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("kept", model.uiState.value.document.content)
+        assertEquals(R.string.error_open, model.uiState.value.statusMessageRes)
+    }
+
+    @Test
+    fun `saving writes the content and clears the modified flag`() = runTest(dispatcher) {
+        val location = DocumentLocation("content://documents/2")
+        val model = viewModel()
+        model.onContentChanged("written")
+
+        model.save(location)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("written", documents.stored.getValue(location.value).content)
+        assertEquals(location, model.uiState.value.document.origin)
+        assertFalse(model.uiState.value.document.isModified)
+        assertEquals(R.string.status_saved, model.uiState.value.statusMessageRes)
+    }
+
+    @Test
+    fun `saving to an address does not make it the origin`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onContentChanged("sent")
+
+        model.saveUrl("https://example.com/data.json")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("sent", documents.stored.getValue("https://example.com/data.json").content)
+        assertEquals(null, model.uiState.value.document.origin)
+    }
+
+    @Test
+    fun `a failed save is reported and keeps the document modified`() = runTest(dispatcher) {
+        documents.failure = java.io.IOException("no room")
+        val model = viewModel()
+        model.onContentChanged("unsaved")
+
+        model.save(DocumentLocation("content://documents/3"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(model.uiState.value.document.isModified)
+        assertEquals(R.string.error_save, model.uiState.value.statusMessageRes)
+    }
+
+    @Test
+    fun `a shown message is not shown twice`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.save(DocumentLocation("content://documents/4"))
+        dispatcher.scheduler.advanceUntilIdle()
+        assertEquals(R.string.status_saved, model.uiState.value.statusMessageRes)
+
+        model.statusShown()
+        assertEquals(null, model.uiState.value.statusMessageRes)
     }
 
     @Test

@@ -1,7 +1,5 @@
 package fr.lc4918.simplecodeeditor.model
 
-import android.net.Uri
-
 /**
  * The document currently held by the editor.
  *
@@ -13,7 +11,7 @@ data class EditorDocument(
     val name: String,
     val content: String,
     val format: DocumentFormat,
-    val origin: Uri? = null,
+    val origin: DocumentLocation? = null,
     val isModified: Boolean = false,
 ) {
     val capabilities: FormatCapabilities

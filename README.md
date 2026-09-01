@@ -28,6 +28,17 @@ and block folding.
 The second toolbar row adapts to the open document: a tool that has no meaning
 for the current format, such as the table mode on an HTML file, is not offered.
 
+## Opening and saving
+
+Documents are read and written through the storage picker of the system, which
+covers the storage of the device and every cloud service installed on it, so no
+account and no provider specific integration is needed. A document opened that
+way is written back in place; one that has never been stored is given a
+destination first.
+
+A document can also be read from and written to an address. Only secure
+addresses are accepted, because the application sends nothing in the clear.
+
 ## Settings
 
 - Interface language: English by default, French and Spanish available.

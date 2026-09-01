@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.lc4918.simplecodeeditor.editor.EditorTool
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
+import fr.lc4918.simplecodeeditor.model.OpenSource
+import fr.lc4918.simplecodeeditor.model.SaveTarget
 import fr.lc4918.simplecodeeditor.model.ViewMode
 
 /**
@@ -30,6 +32,7 @@ fun EditorScreen(
     modifier: Modifier = Modifier,
 ) {
     var settingsVisible by remember { mutableStateOf(false) }
+    var urlPrompt by remember { mutableStateOf<UrlPrompt?>(null) }
     val editor = remember { CodeMirrorController() }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -38,8 +41,14 @@ fun EditorScreen(
             isFullScreen = state.isFullScreen,
             onDocumentNameChanged = actions.onDocumentNameChanged,
             onNew = actions.onNew,
-            onOpen = actions.onOpen,
-            onSave = actions.onSave,
+            // An address is asked for here, because it is a question to the
+            // user rather than a trip through the storage picker.
+            onOpen = { source ->
+                if (source == OpenSource.URL) urlPrompt = UrlPrompt.OPEN else actions.onOpen(source)
+            },
+            onSave = { target ->
+                if (target == SaveTarget.URL) urlPrompt = UrlPrompt.SAVE else actions.onSave(target)
+            },
             onCopy = actions.onCopy,
             onToggleFullScreen = actions.onToggleFullScreen,
             onSettings = { settingsVisible = true },
@@ -69,6 +78,20 @@ fun EditorScreen(
                 ViewMode.TREE, ViewMode.TABLE -> ModePlaceholder(state.viewMode)
             }
         }
+    }
+
+    urlPrompt?.let { prompt ->
+        UrlDialog(
+            prompt = prompt,
+            onConfirm = { url ->
+                urlPrompt = null
+                when (prompt) {
+                    UrlPrompt.OPEN -> actions.onOpenUrl(url)
+                    UrlPrompt.SAVE -> actions.onSaveUrl(url)
+                }
+            },
+            onDismiss = { urlPrompt = null },
+        )
     }
 
     if (settingsVisible) {

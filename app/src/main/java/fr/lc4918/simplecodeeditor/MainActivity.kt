@@ -1,16 +1,20 @@
 package fr.lc4918.simplecodeeditor
 
 import android.os.Bundle
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -18,8 +22,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.lc4918.simplecodeeditor.data.LocaleController
 import fr.lc4918.simplecodeeditor.editor.EditorViewModel
+import fr.lc4918.simplecodeeditor.model.DocumentLocation
+import fr.lc4918.simplecodeeditor.model.EditorDocument
+import fr.lc4918.simplecodeeditor.model.OpenSource
+import fr.lc4918.simplecodeeditor.model.SaveTarget
+import fr.lc4918.simplecodeeditor.ui.CreateDocumentAt
 import fr.lc4918.simplecodeeditor.ui.EditorActions
 import fr.lc4918.simplecodeeditor.ui.EditorScreen
+import fr.lc4918.simplecodeeditor.ui.NewDocument
+import fr.lc4918.simplecodeeditor.ui.OpenEditableDocument
 import fr.lc4918.simplecodeeditor.ui.theme.SimpleCodeEditorTheme
 
 class MainActivity : AppCompatActivity() {
@@ -29,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val viewModel: EditorViewModel = viewModel(factory = EditorViewModel.Factory)
             val state by viewModel.uiState.collectAsStateWithLifecycle()
+            val context = LocalContext.current
 
             // AppCompat keeps the language across starts, so this only has an
             // effect, and only recreates the activity, when the user changes it.
@@ -42,16 +54,57 @@ class MainActivity : AppCompatActivity() {
                 setSystemBarsVisible(!state.isFullScreen)
             }
 
+            val openLauncher = rememberLauncherForActivityResult(
+                remember { OpenEditableDocument() },
+            ) { uri -> uri?.let { viewModel.open(DocumentLocation(it.toString())) } }
+
+            val createLauncher = rememberLauncherForActivityResult(
+                remember { CreateDocumentAt() },
+            ) { uri -> uri?.let { viewModel.save(DocumentLocation(it.toString())) } }
+
+            val snackbarHostState = remember { SnackbarHostState() }
+            LaunchedEffect(state.statusMessageRes) {
+                state.statusMessageRes?.let { messageRes ->
+                    snackbarHostState.showSnackbar(context.getString(messageRes))
+                    viewModel.statusShown()
+                }
+            }
+
             val actions = remember(viewModel) {
                 EditorActions(
                     onDocumentNameChanged = viewModel::onDocumentNameChanged,
                     onContentChanged = viewModel::onContentChanged,
                     onNew = { viewModel.newDocument() },
-                    // Opening, saving and copying need the activity result
-                    // launchers and the clipboard, which come with the storage
-                    // step.
-                    onOpen = {},
-                    onSave = {},
+                    onOpen = { source ->
+                        when (source) {
+                            // Every type is offered rather than the ones the
+                            // application declares: providers index plenty of
+                            // supported files, GPX among them, as a plain byte
+                            // stream, and a narrower filter greys them out. The
+                            // format is worked out from the name once open.
+                            OpenSource.DEVICE -> openLauncher.launch(arrayOf("*/*"))
+                            // Asked for by the screen, which then calls onOpenUrl.
+                            OpenSource.URL -> Unit
+                        }
+                    },
+                    onOpenUrl = viewModel::openUrl,
+                    onSave = { target ->
+                        val document = viewModel.uiState.value.document
+                        when (target) {
+                            // Writing back in place needs somewhere to write
+                            // back to, so a document that has never been stored
+                            // asks for a destination like the cloud one does.
+                            SaveTarget.DEVICE -> document.origin
+                                ?.let(viewModel::save)
+                                ?: createLauncher.launch(document.newDocument())
+
+                            SaveTarget.CLOUD -> createLauncher.launch(document.newDocument())
+                            SaveTarget.URL -> Unit
+                        }
+                    },
+                    onSaveUrl = viewModel::saveUrl,
+                    // Copying needs the formatters, which come with the text
+                    // tools step.
                     onCopy = {},
                     onToggleFullScreen = viewModel::toggleFullScreen,
                     onViewModeSelected = viewModel::setViewMode,
@@ -63,7 +116,10 @@ class MainActivity : AppCompatActivity() {
             }
 
             SimpleCodeEditorTheme(themeOption = state.theme) {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
+                ) { innerPadding ->
                     EditorScreen(
                         state = state,
                         actions = actions,
@@ -86,3 +142,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+
+/** What to suggest to the picker when asking for a destination. */
+private fun EditorDocument.newDocument(): NewDocument =
+    NewDocument(name = fileName(), mimeType = format.mimeTypes.first())

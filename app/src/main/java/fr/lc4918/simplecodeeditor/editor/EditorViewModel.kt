@@ -1,17 +1,21 @@
 package fr.lc4918.simplecodeeditor.editor
 
-import android.app.Application
 import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import fr.lc4918.simplecodeeditor.R
+import fr.lc4918.simplecodeeditor.data.AndroidDocumentRepository
 import fr.lc4918.simplecodeeditor.data.DataStoreSettingsRepository
+import fr.lc4918.simplecodeeditor.data.DocumentRepository
 import fr.lc4918.simplecodeeditor.data.SettingsRepository
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
+import fr.lc4918.simplecodeeditor.model.DocumentLocation
+import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
@@ -24,6 +28,7 @@ import kotlinx.coroutines.launch
 /** Holds the open document and the user settings for the editor screen. */
 class EditorViewModel(
     private val settings: SettingsRepository,
+    private val documents: DocumentRepository,
     private val clock: () -> Long = SystemClock::elapsedRealtime,
 ) : ViewModel() {
 
@@ -99,6 +104,77 @@ class EditorViewModel(
             val detected = FormatDetector.detectFromContent(state.document.content)
             state.copy(document = state.document.copy(format = detected)).coerceViewMode()
         }
+    }
+
+    // Storage
+
+    /** Reads a document from a location handed over by the storage picker. */
+    fun open(location: DocumentLocation) {
+        load(origin = location) { documents.read(location) }
+    }
+
+    /** Reads a document from an address. */
+    fun openUrl(url: String) {
+        load(origin = null) { documents.read(url) }
+    }
+
+    /** Writes the document to a location, which becomes the one it came from. */
+    fun save(location: DocumentLocation) {
+        store(origin = location) { documents.write(location, _uiState.value.document.content) }
+    }
+
+    /** Writes the document to an address, which it cannot be reopened from. */
+    fun saveUrl(url: String) {
+        store(origin = null) { documents.write(url, _uiState.value.document.content) }
+    }
+
+    private fun load(origin: DocumentLocation?, read: suspend () -> DocumentSource) {
+        viewModelScope.launch {
+            runCatching { read() }
+                .onSuccess { source -> setDocument(source.toDocument(origin)) }
+                .onFailure { setStatus(R.string.error_open) }
+        }
+    }
+
+    private fun store(origin: DocumentLocation?, write: suspend () -> Unit) {
+        viewModelScope.launch {
+            runCatching { write() }
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            document = state.document.copy(
+                                origin = origin ?: state.document.origin,
+                                isModified = false,
+                            ),
+                            statusMessageRes = R.string.status_saved,
+                        )
+                    }
+                }
+                .onFailure { setStatus(R.string.error_save) }
+        }
+    }
+
+    private fun DocumentSource.toDocument(origin: DocumentLocation?): EditorDocument {
+        val format = FormatDetector.detect(
+            fileName = name,
+            mimeType = mimeType,
+            content = content,
+        )
+        return EditorDocument(
+            name = name?.substringBeforeLast('.')?.ifEmpty { null } ?: EditorDocument.DEFAULT_NAME,
+            content = content,
+            format = format,
+            origin = origin,
+        )
+    }
+
+    private fun setStatus(messageRes: Int) {
+        _uiState.update { it.copy(statusMessageRes = messageRes) }
+    }
+
+    /** Called once the message has been shown, so it is not shown again. */
+    fun statusShown() {
+        _uiState.update { it.copy(statusMessageRes = null) }
     }
 
     // History
@@ -199,7 +275,10 @@ class EditorViewModel(
                 val application = checkNotNull(
                     this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
                 )
-                EditorViewModel(DataStoreSettingsRepository(application))
+                EditorViewModel(
+                    settings = DataStoreSettingsRepository(application),
+                    documents = AndroidDocumentRepository(application),
+                )
             }
         }
     }

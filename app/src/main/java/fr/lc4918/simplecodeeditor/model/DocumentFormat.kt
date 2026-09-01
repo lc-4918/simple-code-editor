@@ -63,10 +63,6 @@ enum class DocumentFormat(
         get() = FormatCapabilities.of(this)
 
     companion object {
-        /** Every MIME type the app declares it can open. */
-        fun allMimeTypes(): Array<String> =
-            entries.flatMap { it.mimeTypes }.distinct().toTypedArray()
-
         fun fromExtension(extension: String): DocumentFormat? {
             val normalized = extension.trimStart('.').lowercase()
             return entries.firstOrNull { normalized in it.extensions }

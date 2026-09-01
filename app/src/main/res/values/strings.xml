@@ -60,6 +60,14 @@
     <string name="language_french">French</string>
     <string name="language_spanish">Spanish</string>
 
+    <!-- Opening and saving -->
+    <string name="url_address">Address</string>
+    <string name="url_hint">https://example.com/data.json</string>
+    <string name="status_saved">Document saved</string>
+    <string name="error_open">The document could not be opened</string>
+    <string name="error_save">The document could not be saved</string>
+    <string name="error_invalid_url">Enter a secure address, starting with https://</string>
+
     <!-- Search panel of the editing surface -->
     <string name="search_find">Find</string>
     <string name="search_replace_field">Replace</string>
