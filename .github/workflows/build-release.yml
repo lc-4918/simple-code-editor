@@ -1,0 +1,109 @@
+name: Build & Release
+
+# Actions pinned to the last major running on Node.js 24: Node.js 20 is
+# deprecated and the runners already forced Node 24 with a warning. These
+# majors need a runner >= 2.327.1, which ubuntu-latest is well past. The
+# breaking changes they announce do not concern this workflow: the block on
+# fork pull requests (checkout v7) assumes pull_request_target or
+# workflow_run, and the direct upload (upload-artifact v7) is optional, on an
+# "archive" setting that is not set here.
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  debug:
+    name: Build debug APK
+    if: startsWith(github.ref, 'refs/heads/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Java 21: the Gradle daemon of this project asks for it, in
+      # gradle/gradle-daemon-jvm.properties.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        run: ./gradlew :app:testDebugUnitTest
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: simple-code-debug-${{ github.sha }}
+          path: app/build/outputs/apk/debug/*.apk
+
+  release:
+    name: Build & publish signed release APK
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # fetch-depth: 0 : the version comes from git describe, which needs the
+      # tags; a shallow checkout would build every release as v0.0.0.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Decode release keystore
+        run: echo "${{ secrets.KEYSTORE_FILE }}" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Build signed release APK
+        env:
+          KEYSTORE_PATH: ${{ runner.temp }}/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease
+
+      - name: Clean up keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      # The file is named after the tag by androidComponents in
+      # build.gradle.kts. Checking it is here turns a silent release with no
+      # asset into a failure.
+      - name: Check the APK carries the tag
+        env:
+          TAG: ${{ github.ref_name }}
+        run: test -f "app/build/outputs/apk/release/simple-code-${TAG}.apk"
+
+      # The release is published under the identity of the token given here
+      # rather than the GITHUB_TOKEN of the run: that one belongs to
+      # github-actions[bot], which would then stand as the author of every
+      # release. The author cannot be changed afterwards, the API does not
+      # expose it for writing, so it has to be settled at creation.
+      #
+      # Secret RELEASE_PAT: fine grained personal token of lc-4918, scope
+      # "Contents: read and write" on this repository alone. Missing, the step
+      # fails rather than falling back to the bot without a word.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          token: ${{ secrets.RELEASE_PAT }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: app/build/outputs/apk/release/*.apk

@@ -94,6 +94,13 @@ under `editor-web`, which needs Node.
     npm install
     npm run build
 
+## Releases
+
+The version is taken from the git tag rather than written in the build script,
+so every release declares its own version code and name. Pushing a tag shaped
+`vMAJOR.MINOR.PATCH` builds a signed APK and publishes it as a release; a push
+to any branch builds a debug APK and runs the unit tests.
+
 ## Licence
 
 Not published under a licence yet.
