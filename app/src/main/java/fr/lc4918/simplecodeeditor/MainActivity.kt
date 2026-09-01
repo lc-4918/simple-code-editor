@@ -1,5 +1,8 @@
 package fr.lc4918.simplecodeeditor
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -21,7 +24,10 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.lc4918.simplecodeeditor.data.LocaleController
+import fr.lc4918.simplecodeeditor.editor.EditorUiState
 import fr.lc4918.simplecodeeditor.editor.EditorViewModel
+import fr.lc4918.simplecodeeditor.format.DocumentFormatter
+import fr.lc4918.simplecodeeditor.model.CopyVariant
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.OpenSource
@@ -103,9 +109,15 @@ class MainActivity : AppCompatActivity() {
                         }
                     },
                     onSaveUrl = viewModel::saveUrl,
-                    // Copying needs the formatters, which come with the text
-                    // tools step.
-                    onCopy = {},
+                    onCopy = { variant ->
+                        val state = viewModel.uiState.value
+                        copyToClipboard(state.document.fileName(), state.copyText(variant))
+                        // From Android 13 on the system shows its own notice,
+                        // and a second one on top of it would only repeat it.
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                            viewModel.reportCopied()
+                        }
+                    },
                     onToggleFullScreen = viewModel::toggleFullScreen,
                     onViewModeSelected = viewModel::setViewMode,
                     onTool = viewModel::onTool,
@@ -130,6 +142,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun copyToClipboard(label: String, text: String) {
+        val clipboard = getSystemService(ClipboardManager::class.java)
+        clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
+    }
+
     /** Hides the status and navigation bars while the editor is in full screen. */
     private fun setSystemBarsVisible(visible: Boolean) {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
@@ -141,6 +158,14 @@ class MainActivity : AppCompatActivity() {
             controller.hide(WindowInsetsCompat.Type.systemBars())
         }
     }
+}
+
+/** The document in the shape the chosen copy variant asks for. */
+private fun EditorUiState.copyText(variant: CopyVariant): String = when (variant) {
+    CopyVariant.FORMATTED -> DocumentFormatter.indent(document.content, format, indentWidth)
+    CopyVariant.COMPACTED -> DocumentFormatter.compact(document.content, format)
+    CopyVariant.ESCAPED -> DocumentFormatter.escape(document.content)
+    CopyVariant.AS_IS -> document.content
 }
 
 /** What to suggest to the picker when asking for a destination. */

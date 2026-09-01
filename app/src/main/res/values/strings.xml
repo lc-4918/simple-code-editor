@@ -64,6 +64,7 @@
     <string name="url_address">Address</string>
     <string name="url_hint">https://example.com/data.json</string>
     <string name="status_saved">Document saved</string>
+    <string name="status_copied">Copied to the clipboard</string>
     <string name="error_open">The document could not be opened</string>
     <string name="error_save">The document could not be saved</string>
     <string name="error_invalid_url">Enter a secure address, starting with https://</string>

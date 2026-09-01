@@ -159,6 +159,37 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `the format tool lays the document out and can be undone in one step`() =
+        runTest(dispatcher) {
+            val model = viewModel()
+            model.onContentChanged("""{"a":1}""")
+
+            model.onTool(EditorTool.INDENT)
+            assertEquals("{\n  \"a\": 1\n}", model.uiState.value.document.content)
+
+            model.undo()
+            assertEquals("""{"a":1}""", model.uiState.value.document.content)
+        }
+
+    @Test
+    fun `the compact tool squeezes the document`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onContentChanged("{\n  \"a\": 1\n}")
+
+        model.onTool(EditorTool.COMPACT)
+        assertEquals("""{"a":1}""", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a tool that changes nothing adds no step to the history`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = """{"a":1}"""))
+
+        model.onTool(EditorTool.COMPACT)
+        assertFalse(model.uiState.value.canUndo)
+    }
+
+    @Test
     fun `the search tool toggles the search bar`() = runTest(dispatcher) {
         val model = viewModel()
         model.onTool(EditorTool.SEARCH)

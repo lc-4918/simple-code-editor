@@ -39,6 +39,18 @@ destination first.
 A document can also be read from and written to an address. Only secure
 addresses are accepted, because the application sends nothing in the clear.
 
+## Laying out and copying
+
+The format and compact tools rewrite the whitespace of the open document, each
+format by its own rules and none of them by parsing: the order of the keys and
+the exact spelling of the numbers survive, and a document that cannot be
+scanned to the end is left untouched rather than half rewritten. Compacting a
+script keeps its line breaks, since dropping them would join two statements
+that relied on the end of the line to close the first one.
+
+Copy offers the document laid out, compacted, escaped for pasting between two
+quotes, or exactly as it stands.
+
 ## Settings
 
 - Interface language: English by default, French and Spanish available.

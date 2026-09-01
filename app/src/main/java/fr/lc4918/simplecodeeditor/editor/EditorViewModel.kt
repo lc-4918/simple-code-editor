@@ -11,6 +11,7 @@ import fr.lc4918.simplecodeeditor.data.AndroidDocumentRepository
 import fr.lc4918.simplecodeeditor.data.DataStoreSettingsRepository
 import fr.lc4918.simplecodeeditor.data.DocumentRepository
 import fr.lc4918.simplecodeeditor.data.SettingsRepository
+import fr.lc4918.simplecodeeditor.format.DocumentFormatter
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
@@ -209,22 +210,46 @@ class EditorViewModel(
      * Runs a tool of the second toolbar row.
      *
      * Folding is run by the editing surface, which owns the fold state, so it
-     * never reaches here. The tools that rewrite the document wait for their
-     * formatter.
+     * never reaches here.
      */
     fun onTool(tool: EditorTool) {
         when (tool) {
             EditorTool.UNDO -> undo()
             EditorTool.REDO -> redo()
             EditorTool.SEARCH -> setSearchVisible(!_uiState.value.isSearchVisible)
+            EditorTool.INDENT -> rewrite { state ->
+                DocumentFormatter.indent(state.document.content, state.format, state.indentWidth)
+            }
+
+            EditorTool.COMPACT -> rewrite { state ->
+                DocumentFormatter.compact(state.document.content, state.format)
+            }
+
             EditorTool.EXPAND_ALL,
             EditorTool.COLLAPSE_ALL,
-            EditorTool.INDENT,
-            EditorTool.COMPACT,
             EditorTool.SORT,
             EditorTool.FILTER,
             -> Unit
         }
+    }
+
+    /**
+     * Replaces the content with a rewritten version of itself.
+     *
+     * The coalescing window is closed first, so that a rewrite is always its
+     * own step in the history rather than joining the keystroke before it.
+     */
+    private fun rewrite(transform: (EditorUiState) -> String) {
+        val state = _uiState.value
+        val rewritten = transform(state)
+        if (rewritten == state.document.content) return
+        lastRecordedAt = null
+        onContentChanged(rewritten)
+    }
+
+    /** Reports that the document has just been put on the clipboard. */
+    fun reportCopied() {
+        setStatus(R.string.status_copied)
     }
 
     // View state

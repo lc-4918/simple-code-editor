@@ -58,6 +58,7 @@
     <string name="url_address">Dirección</string>
     <string name="url_hint">https://ejemplo.es/datos.json</string>
     <string name="status_saved">Documento guardado</string>
+    <string name="status_copied">Copiado al portapapeles</string>
     <string name="error_open">No se ha podido abrir el documento</string>
     <string name="error_save">No se ha podido guardar el documento</string>
     <string name="error_invalid_url">Introduce una dirección segura, que empiece por https://</string>

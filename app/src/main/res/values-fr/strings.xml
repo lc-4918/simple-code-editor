@@ -58,6 +58,7 @@
     <string name="url_address">Adresse</string>
     <string name="url_hint">https://exemple.fr/donnees.json</string>
     <string name="status_saved">Document enregistré</string>
+    <string name="status_copied">Copié dans le presse-papiers</string>
     <string name="error_open">Le document n\'a pas pu être ouvert</string>
     <string name="error_save">Le document n\'a pas pu être enregistré</string>
     <string name="error_invalid_url">Saisir une adresse sécurisée, commençant par https://</string>
