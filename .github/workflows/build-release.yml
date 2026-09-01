@@ -53,11 +53,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      # fetch-depth: 0 : the version comes from git describe, which needs the
-      # tags; a shallow checkout would build every release as v0.0.0.
+      # The version comes from git describe, which needs the history and the
+      # tags: without either, every release would be built as v0.0.0.
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          fetch-tags: true
 
       - uses: actions/setup-java@v5
         with:
@@ -84,12 +85,18 @@ jobs:
         run: rm -f "$RUNNER_TEMP/release.jks"
 
       # The file is named after the tag by androidComponents in
-      # build.gradle.kts. Checking it is here turns a silent release with no
-      # asset into a failure.
+      # build.gradle.kts, which reads it through git describe. Checking the
+      # name turns two silent failures into loud ones: a release published with
+      # no asset, and one built with the fallback version, whose version code
+      # would be 1 and would never update anything.
       - name: Check the APK carries the tag
         env:
           TAG: ${{ github.ref_name }}
-        run: test -f "app/build/outputs/apk/release/simple-code-${TAG}.apk"
+        run: |
+          set -euo pipefail
+          echo "describe: $(git describe --tags --always --dirty)"
+          ls -l app/build/outputs/apk/release/
+          test -f "app/build/outputs/apk/release/simple-code-${TAG}.apk"
 
       # The release is published under the identity of the token given here
       # rather than the GITHUB_TOKEN of the run: that one belongs to
