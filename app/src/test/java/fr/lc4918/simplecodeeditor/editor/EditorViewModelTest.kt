@@ -141,6 +141,28 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `the undo and redo tools drive the history`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onContentChanged("value")
+
+        model.onTool(EditorTool.UNDO)
+        assertEquals("", model.uiState.value.document.content)
+
+        model.onTool(EditorTool.REDO)
+        assertEquals("value", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `the search tool toggles the search bar`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.onTool(EditorTool.SEARCH)
+        assertTrue(model.uiState.value.isSearchVisible)
+
+        model.onTool(EditorTool.SEARCH)
+        assertFalse(model.uiState.value.isSearchVisible)
+    }
+
+    @Test
     fun `theme changes are persisted and reflected in the state`() = runTest(dispatcher) {
         val model = viewModel()
         model.setTheme(ThemeOption.DARK)

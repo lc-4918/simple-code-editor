@@ -4,7 +4,7 @@ import androidx.annotation.StringRes
 import fr.lc4918.simplecodeeditor.R
 
 /** User choice for the colour scheme. */
-enum class ThemeOption(val storageKey: String, @param:StringRes val labelRes: Int) {
+enum class ThemeOption(val storageKey: String, @param:StringRes override val labelRes: Int) : LabelledOption {
     SYSTEM("system", R.string.theme_system),
     LIGHT("light", R.string.theme_light),
     DARK("dark", R.string.theme_dark);

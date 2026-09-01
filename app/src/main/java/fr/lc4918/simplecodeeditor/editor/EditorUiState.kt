@@ -1,9 +1,12 @@
 package fr.lc4918.simplecodeeditor.editor
 
+import androidx.annotation.StringRes
+import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FormatCapabilities
+import fr.lc4918.simplecodeeditor.model.LabelledOption
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
 import fr.lc4918.simplecodeeditor.data.SettingsRepository
@@ -51,14 +54,14 @@ data class EditorUiState(
 }
 
 /** The tools of the second toolbar row, excluding the mode selector. */
-enum class EditorTool {
-    INDENT,
-    COMPACT,
-    EXPAND_ALL,
-    COLLAPSE_ALL,
-    SORT,
-    FILTER,
-    SEARCH,
-    UNDO,
-    REDO,
+enum class EditorTool(@param:StringRes override val labelRes: Int) : LabelledOption {
+    INDENT(R.string.tool_indent),
+    COMPACT(R.string.tool_compact),
+    EXPAND_ALL(R.string.tool_expand_all),
+    COLLAPSE_ALL(R.string.tool_collapse_all),
+    SORT(R.string.tool_sort),
+    FILTER(R.string.tool_filter),
+    SEARCH(R.string.tool_search),
+    UNDO(R.string.tool_undo),
+    REDO(R.string.tool_redo),
 }

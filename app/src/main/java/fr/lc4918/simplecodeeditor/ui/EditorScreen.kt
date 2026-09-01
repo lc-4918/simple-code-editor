@@ -1,52 +1,84 @@
 package fr.lc4918.simplecodeeditor.ui
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
 import fr.lc4918.simplecodeeditor.model.ViewMode
 
 /**
- * Main editor screen.
+ * Main editor screen: the sticky two row header above the editing surface.
  *
- * At this stage it only reports the document state so the foundation can be
- * exercised. The sticky title bar, the contextual toolbar and the editing
- * surface replace this body in the following steps.
+ * The header sits outside the scrolling area, which is what keeps it visible
+ * while the document is scrolled.
  */
 @Composable
 fun EditorScreen(
     state: EditorUiState,
-    onViewModeSelected: (ViewMode) -> Unit,
+    actions: EditorActions,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    var settingsVisible by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        EditorTitleBar(
+            documentName = state.document.name,
+            isFullScreen = state.isFullScreen,
+            onDocumentNameChanged = actions.onDocumentNameChanged,
+            onNew = actions.onNew,
+            onOpen = actions.onOpen,
+            onSave = actions.onSave,
+            onCopy = actions.onCopy,
+            onToggleFullScreen = actions.onToggleFullScreen,
+            onSettings = { settingsVisible = true },
+        )
+        EditorToolbar(
+            state = state,
+            onViewModeSelected = actions.onViewModeSelected,
+            onTool = actions.onTool,
+        )
+        Box(modifier = Modifier.weight(1f)) {
+            when (state.viewMode) {
+                ViewMode.TEXT -> EditorTextSurface(
+                    content = state.document.content,
+                    onContentChanged = actions.onContentChanged,
+                )
+
+                ViewMode.TREE, ViewMode.TABLE -> ModePlaceholder(state.viewMode)
+            }
+        }
+    }
+
+    if (settingsVisible) {
+        SettingsSheet(
+            theme = state.theme,
+            language = state.language,
+            indentWidth = state.indentWidth,
+            onThemeSelected = actions.onThemeSelected,
+            onLanguageSelected = actions.onLanguageSelected,
+            onIndentWidthSelected = actions.onIndentWidthSelected,
+            onDismiss = { settingsVisible = false },
+        )
+    }
+}
+
+/** Stands in for the tree and table views until they are built. */
+@Composable
+private fun ModePlaceholder(mode: ViewMode) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text(
-            text = state.document.fileName(),
+            text = stringResource(mode.labelRes),
             style = MaterialTheme.typography.titleMedium,
         )
-        Text(
-            text = stringResource(state.format.labelRes),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        state.capabilities.availableModes.forEach { mode ->
-            FilterChip(
-                selected = state.viewMode == mode,
-                onClick = { onViewModeSelected(mode) },
-                label = { Text(stringResource(mode.labelRes)) },
-            )
-        }
     }
 }

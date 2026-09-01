@@ -4,7 +4,7 @@ import androidx.annotation.StringRes
 import fr.lc4918.simplecodeeditor.R
 
 /** The three ways a document can be presented in the main panel. */
-enum class ViewMode(@param:StringRes val labelRes: Int) {
+enum class ViewMode(@param:StringRes override val labelRes: Int) : LabelledOption {
     /** Raw source text, with line numbers, highlighting and folding. */
     TEXT(R.string.mode_text),
 

@@ -13,8 +13,8 @@ enum class AppLanguage(
     val storageKey: String,
     /** BCP 47 tag, empty for the system default. */
     val languageTag: String,
-    @param:StringRes val labelRes: Int,
-) {
+    @param:StringRes override val labelRes: Int,
+) : LabelledOption {
     SYSTEM("system", "", R.string.language_system),
     ENGLISH("en", "en", R.string.language_english),
     FRENCH("fr", "fr", R.string.language_french),
