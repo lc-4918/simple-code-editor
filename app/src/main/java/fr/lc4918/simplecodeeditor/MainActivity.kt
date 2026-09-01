@@ -30,8 +30,12 @@ class MainActivity : AppCompatActivity() {
             val viewModel: EditorViewModel = viewModel(factory = EditorViewModel.Factory)
             val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-            LaunchedEffect(state.language) {
-                LocaleController.apply(state.language)
+            // AppCompat keeps the language across starts, so this only has an
+            // effect, and only recreates the activity, when the user changes it.
+            LaunchedEffect(state.isLanguageLoaded, state.language) {
+                if (state.isLanguageLoaded) {
+                    LocaleController.apply(state.language)
+                }
             }
 
             LaunchedEffect(state.isFullScreen) {

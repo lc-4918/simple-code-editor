@@ -4,3 +4,8 @@
 *.png binary
 gradlew text eol=lf
 gradlew.bat text eol=crlf
+
+# Bundle produced from editor-web, kept out of the diffs and of the language
+# statistics because it is build output rather than written code.
+app/src/main/assets/editor/editor.js linguist-generated=true -diff
+editor-web/package-lock.json linguist-generated=true -diff

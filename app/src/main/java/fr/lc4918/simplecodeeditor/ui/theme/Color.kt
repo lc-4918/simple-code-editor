@@ -33,3 +33,8 @@ val ToolbarSelectedBackgroundLight = Color(0xFFEDEDED)
 val ToolbarSelectedBackgroundDark = Color(0xFFD5D5D5)
 val ToolbarSelectedContentLight = Color(0xFF33520F)
 val ToolbarSelectedContentDark = Color(0xFF1F3308)
+
+val ActiveLineLight = Color(0x0F000000)
+val ActiveLineDark = Color(0x14FFFFFF)
+val SelectionLight = Color(0x553883FA)
+val SelectionDark = Color(0x559EC1FD)

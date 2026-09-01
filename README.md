@@ -40,6 +40,15 @@ Requires the Android SDK and a JDK 21 toolchain.
     ./gradlew assembleDebug
     ./gradlew testDebugUnitTest
 
+The editing surface is CodeMirror, running in a web view and loaded from the
+application assets, so the application builds and runs offline. The bundle in
+`app/src/main/assets/editor` is committed; rebuild it after changing anything
+under `editor-web`, which needs Node.
+
+    cd editor-web
+    npm install
+    npm run build
+
 ## Licence
 
 Not published under a licence yet.

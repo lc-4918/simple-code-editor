@@ -39,7 +39,9 @@ class EditorViewModel(
             settings.theme.collect { option -> _uiState.update { it.copy(theme = option) } }
         }
         viewModelScope.launch {
-            settings.language.collect { value -> _uiState.update { it.copy(language = value) } }
+            settings.language.collect { value ->
+                _uiState.update { it.copy(language = value, isLanguageLoaded = true) }
+            }
         }
         viewModelScope.launch {
             settings.indentWidth.collect { width -> _uiState.update { it.copy(indentWidth = width) } }
@@ -130,18 +132,19 @@ class EditorViewModel(
     /**
      * Runs a tool of the second toolbar row.
      *
-     * The tools that rewrite the document, and the folding ones, are driven by
-     * the editing engine and are connected when the editing surface gains it.
+     * Folding is run by the editing surface, which owns the fold state, so it
+     * never reaches here. The tools that rewrite the document wait for their
+     * formatter.
      */
     fun onTool(tool: EditorTool) {
         when (tool) {
             EditorTool.UNDO -> undo()
             EditorTool.REDO -> redo()
             EditorTool.SEARCH -> setSearchVisible(!_uiState.value.isSearchVisible)
-            EditorTool.INDENT,
-            EditorTool.COMPACT,
             EditorTool.EXPAND_ALL,
             EditorTool.COLLAPSE_ALL,
+            EditorTool.INDENT,
+            EditorTool.COMPACT,
             EditorTool.SORT,
             EditorTool.FILTER,
             -> Unit

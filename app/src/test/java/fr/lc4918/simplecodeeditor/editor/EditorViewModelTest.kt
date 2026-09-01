@@ -172,6 +172,15 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `the language is only reported as loaded once it has been read`() = runTest(dispatcher) {
+        val model = viewModel()
+        assertFalse(model.uiState.value.isLanguageLoaded)
+
+        dispatcher.scheduler.advanceUntilIdle()
+        assertTrue(model.uiState.value.isLanguageLoaded)
+    }
+
+    @Test
     fun `format can be redetected from the content alone`() = runTest(dispatcher) {
         val model = viewModel()
         model.onContentChanged("body { color: red; }")

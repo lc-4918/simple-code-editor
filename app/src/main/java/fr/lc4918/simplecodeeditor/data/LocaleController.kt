@@ -8,7 +8,10 @@ import fr.lc4918.simplecodeeditor.model.AppLanguage
  * Applies the interface language through the per-app language API.
  *
  * The AndroidX implementation backports the behaviour below Android 13, so the
- * same call works on every version the app supports.
+ * same call works on every version the app supports. It stores the choice and
+ * restores it at the next start, which the manifest enables, so applying the
+ * stored language again on a later start changes nothing and leaves the
+ * activity alone.
  */
 object LocaleController {
 

@@ -17,6 +17,13 @@ data class EditorUiState(
     val viewMode: ViewMode = ViewMode.TEXT,
     val theme: ThemeOption = ThemeOption.DEFAULT,
     val language: AppLanguage = AppLanguage.DEFAULT,
+    /**
+     * False until the stored language has been read.
+     *
+     * Applying a language recreates the activity, so the default one must not
+     * be applied before the stored choice is known.
+     */
+    val isLanguageLoaded: Boolean = false,
     val indentWidth: Int = SettingsRepository.DEFAULT_INDENT_WIDTH,
     val isFullScreen: Boolean = false,
     val isSearchVisible: Boolean = false,

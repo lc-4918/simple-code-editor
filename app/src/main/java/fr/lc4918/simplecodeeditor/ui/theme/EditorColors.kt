@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
  */
 @Immutable
 data class EditorColors(
+    /** True for the dark set, which the embedded editor needs to know about. */
+    val dark: Boolean,
     val titleBarBackground: Color,
     val titleBarContent: Color,
     val toolbarBackground: Color,
@@ -23,9 +25,12 @@ data class EditorColors(
     val gutterText: Color,
     val codeBackground: Color,
     val codeText: Color,
+    val activeLine: Color,
+    val selection: Color,
 )
 
 val LightEditorColors = EditorColors(
+    dark = false,
     titleBarBackground = TitleBarBackgroundLight,
     titleBarContent = TitleBarContentLight,
     toolbarBackground = ToolbarBackgroundLight,
@@ -36,9 +41,12 @@ val LightEditorColors = EditorColors(
     gutterText = GutterTextLight,
     codeBackground = CodeBackgroundLight,
     codeText = CodeTextLight,
+    activeLine = ActiveLineLight,
+    selection = SelectionLight,
 )
 
 val DarkEditorColors = EditorColors(
+    dark = true,
     titleBarBackground = TitleBarBackgroundDark,
     titleBarContent = TitleBarContentDark,
     toolbarBackground = ToolbarBackgroundDark,
@@ -49,6 +57,8 @@ val DarkEditorColors = EditorColors(
     gutterText = GutterTextDark,
     codeBackground = CodeBackgroundDark,
     codeText = CodeTextDark,
+    activeLine = ActiveLineDark,
+    selection = SelectionDark,
 )
 
 val LocalEditorColors = staticCompositionLocalOf { LightEditorColors }

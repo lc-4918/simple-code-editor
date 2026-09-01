@@ -54,6 +54,19 @@
     <string name="language_french">Français</string>
     <string name="language_spanish">Espagnol</string>
 
+    <!-- Search panel of the editing surface -->
+    <string name="search_find">Rechercher</string>
+    <string name="search_replace_field">Remplacer</string>
+    <string name="search_next">suivant</string>
+    <string name="search_previous">precedent</string>
+    <string name="search_all">tout</string>
+    <string name="search_match_case">respecter la casse</string>
+    <string name="search_regexp">expression</string>
+    <string name="search_by_word">mot entier</string>
+    <string name="search_replace">remplacer</string>
+    <string name="search_replace_all">tout remplacer</string>
+    <string name="search_close">fermer</string>
+
     <!-- Common -->
     <string name="action_cancel">Annuler</string>
     <string name="action_confirm">OK</string>

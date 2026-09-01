@@ -60,6 +60,19 @@
     <string name="language_french">French</string>
     <string name="language_spanish">Spanish</string>
 
+    <!-- Search panel of the editing surface -->
+    <string name="search_find">Find</string>
+    <string name="search_replace_field">Replace</string>
+    <string name="search_next">next</string>
+    <string name="search_previous">previous</string>
+    <string name="search_all">all</string>
+    <string name="search_match_case">match case</string>
+    <string name="search_regexp">regexp</string>
+    <string name="search_by_word">by word</string>
+    <string name="search_replace">replace</string>
+    <string name="search_replace_all">replace all</string>
+    <string name="search_close">close</string>
+
     <!-- Common -->
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">OK</string>

@@ -1,0 +1,25 @@
+{
+  "name": "simple-code-editor-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CodeMirror bundle embedded in the Android application assets",
+  "scripts": {
+    "build": "esbuild src/editor.js --bundle --minify --format=iife --target=es2019 --outfile=../app/src/main/assets/editor/editor.js"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.9",
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/lang-xml": "^6.1.0",
+    "@codemirror/language": "^6.11.0",
+    "@codemirror/search": "^6.5.11",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/view": "^6.36.5",
+    "@lezer/highlight": "^1.2.1"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

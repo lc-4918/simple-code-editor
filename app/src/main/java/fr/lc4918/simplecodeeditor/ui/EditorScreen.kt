@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import fr.lc4918.simplecodeeditor.editor.EditorTool
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
 import fr.lc4918.simplecodeeditor.model.ViewMode
 
@@ -29,6 +30,7 @@ fun EditorScreen(
     modifier: Modifier = Modifier,
 ) {
     var settingsVisible by remember { mutableStateOf(false) }
+    val editor = remember { CodeMirrorController() }
 
     Column(modifier = modifier.fillMaxSize()) {
         EditorTitleBar(
@@ -45,12 +47,22 @@ fun EditorScreen(
         EditorToolbar(
             state = state,
             onViewModeSelected = actions.onViewModeSelected,
-            onTool = actions.onTool,
+            onTool = { tool ->
+                when (tool) {
+                    EditorTool.COLLAPSE_ALL -> editor.foldAll()
+                    EditorTool.EXPAND_ALL -> editor.unfoldAll()
+                    else -> actions.onTool(tool)
+                }
+            },
         )
         Box(modifier = Modifier.weight(1f)) {
             when (state.viewMode) {
-                ViewMode.TEXT -> EditorTextSurface(
+                ViewMode.TEXT -> CodeMirrorSurface(
                     content = state.document.content,
+                    format = state.format,
+                    indentWidth = state.indentWidth,
+                    isSearchVisible = state.isSearchVisible,
+                    controller = editor,
                     onContentChanged = actions.onContentChanged,
                 )
 
