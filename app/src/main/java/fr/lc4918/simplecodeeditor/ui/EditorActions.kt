@@ -4,8 +4,10 @@ import androidx.compose.runtime.Immutable
 import fr.lc4918.simplecodeeditor.editor.EditorTool
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CopyVariant
+import fr.lc4918.simplecodeeditor.model.FilterOperator
 import fr.lc4918.simplecodeeditor.model.OpenSource
 import fr.lc4918.simplecodeeditor.model.SaveTarget
+import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
 
@@ -28,6 +30,10 @@ class EditorActions(
     val onToggleFullScreen: () -> Unit,
     val onViewModeSelected: (ViewMode) -> Unit,
     val onTool: (EditorTool) -> Unit,
+    val onCellChanged: (row: Int, column: Int, value: String) -> Unit,
+    val onAddRow: () -> Unit,
+    val onSort: (column: Int, direction: SortDirection) -> Unit,
+    val onFilter: (column: Int, operator: FilterOperator, value: String) -> Unit,
     val onThemeSelected: (ThemeOption) -> Unit,
     val onLanguageSelected: (AppLanguage) -> Unit,
     val onIndentWidthSelected: (Int) -> Unit,

@@ -23,7 +23,12 @@ and block folding.
 - **Text** for every format.
 - **Tree** for the nested formats, JSON and XML.
 - **Table** for CSV, which can be edited either as raw text or as a grid of
-  rows and columns.
+  rows and columns. The grid reads the first row as the column titles, keeps
+  the quoting rules of the format on the way back out, and only quotes the
+  fields that need it.
+
+Sort and filter ask which column to work on. Both rewrite the document, so a
+filter that drops rows is undone in one step like any other edit.
 
 The second toolbar row adapts to the open document: a tool that has no meaning
 for the current format, such as the table mode on an HTML file, is not offered.

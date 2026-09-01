@@ -7,6 +7,8 @@ import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
+import fr.lc4918.simplecodeeditor.model.FilterOperator
+import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.ThemeOption
 import fr.lc4918.simplecodeeditor.model.ViewMode
 import kotlinx.coroutines.Dispatchers
@@ -197,6 +199,66 @@ class EditorViewModelTest {
 
         model.onTool(EditorTool.SEARCH)
         assertFalse(model.uiState.value.isSearchVisible)
+    }
+
+    @Test
+    fun `changing a cell rewrites the document`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.CSV).copy(content = "name,city\nada,lyon"),
+        )
+
+        model.onCellChanged(row = 0, column = 1, value = "oslo")
+
+        assertEquals("name,city\nada,oslo", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `adding a row appends an empty one of the right width`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.CSV).copy(content = "a,b\n1,2"),
+        )
+
+        model.addRow()
+
+        assertEquals("a,b\n1,2\n,", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `sorting reorders the rows and leaves the header alone`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.CSV).copy(content = "n,s\nada,9\nlinus,10"),
+        )
+
+        model.sortRows(column = 1, direction = SortDirection.DESCENDING)
+
+        assertEquals("n,s\nlinus,10\nada,9", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `filtering drops the other rows and one undo brings them back`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(
+            EditorDocument.empty(DocumentFormat.CSV).copy(content = "n,s\nada,9\nlinus,10"),
+        )
+
+        model.filterRows(column = 0, operator = FilterOperator.CONTAINS, value = "ada")
+        assertEquals("n,s\nada,9", model.uiState.value.document.content)
+
+        model.undo()
+        assertEquals("n,s\nada,9\nlinus,10", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a table operation on a document that is not one changes nothing`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.CSV).copy(content = ""))
+
+        model.addRow()
+
+        assertEquals("", model.uiState.value.document.content)
     }
 
     @Test

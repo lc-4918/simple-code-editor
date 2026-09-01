@@ -11,9 +11,14 @@ import fr.lc4918.simplecodeeditor.data.AndroidDocumentRepository
 import fr.lc4918.simplecodeeditor.data.DataStoreSettingsRepository
 import fr.lc4918.simplecodeeditor.data.DocumentRepository
 import fr.lc4918.simplecodeeditor.data.SettingsRepository
+import fr.lc4918.simplecodeeditor.format.CsvParser
+import fr.lc4918.simplecodeeditor.format.CsvTransform
 import fr.lc4918.simplecodeeditor.format.DocumentFormatter
 import fr.lc4918.simplecodeeditor.format.FormatDetector
 import fr.lc4918.simplecodeeditor.model.AppLanguage
+import fr.lc4918.simplecodeeditor.model.CsvTable
+import fr.lc4918.simplecodeeditor.model.FilterOperator
+import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
@@ -245,6 +250,31 @@ class EditorViewModel(
         if (rewritten == state.document.content) return
         lastRecordedAt = null
         onContentChanged(rewritten)
+    }
+
+    // Table
+
+    /** Replaces one cell of the grid, which rewrites the whole document. */
+    fun onCellChanged(row: Int, column: Int, value: String) {
+        rewriteTable { table -> table.withCell(row, column, value) }
+    }
+
+    fun addRow() {
+        rewriteTable { table -> table.copy(rows = table.rows + listOf(List(table.columnCount) { "" })) }
+    }
+
+    fun sortRows(column: Int, direction: SortDirection) {
+        rewriteTable { table -> CsvTransform.sort(table, column, direction) }
+    }
+
+    /** Drops every row the filter does not keep, which one undo brings back. */
+    fun filterRows(column: Int, operator: FilterOperator, value: String) {
+        rewriteTable { table -> CsvTransform.filter(table, column, operator, value) }
+    }
+
+    private fun rewriteTable(transform: (CsvTable) -> CsvTable) {
+        val table = CsvParser.parse(_uiState.value.document.content) ?: return
+        rewrite { CsvParser.format(transform(table)) }
     }
 
     /** Reports that the document has just been put on the clipboard. */

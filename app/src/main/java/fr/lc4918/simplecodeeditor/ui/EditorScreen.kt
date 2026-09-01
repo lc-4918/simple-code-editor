@@ -15,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.lc4918.simplecodeeditor.editor.EditorTool
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
+import fr.lc4918.simplecodeeditor.format.CsvParser
+import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.OpenSource
 import fr.lc4918.simplecodeeditor.model.SaveTarget
 import fr.lc4918.simplecodeeditor.model.ViewMode
@@ -33,7 +35,18 @@ fun EditorScreen(
 ) {
     var settingsVisible by remember { mutableStateOf(false) }
     var urlPrompt by remember { mutableStateOf<UrlPrompt?>(null) }
+    var tablePrompt by remember { mutableStateOf<TablePrompt?>(null) }
     val editor = remember { CodeMirrorController() }
+
+    // Read once per document, and only for the format that has columns.
+    val columnNames = remember(state.format, state.document.content) {
+        if (state.format != DocumentFormat.CSV) {
+            null
+        } else {
+            CsvParser.parse(state.document.content)
+                ?.let { table -> List(table.columnCount, table::columnName) }
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         EditorTitleBar(
@@ -57,9 +70,14 @@ fun EditorScreen(
             state = state,
             onViewModeSelected = actions.onViewModeSelected,
             onTool = { tool ->
-                when (tool) {
-                    EditorTool.COLLAPSE_ALL -> editor.foldAll()
-                    EditorTool.EXPAND_ALL -> editor.unfoldAll()
+                when {
+                    tool == EditorTool.COLLAPSE_ALL -> editor.foldAll()
+                    tool == EditorTool.EXPAND_ALL -> editor.unfoldAll()
+                    // Both ask which column to work on before they run.
+                    tool == EditorTool.SORT && columnNames != null -> tablePrompt = TablePrompt.SORT
+                    tool == EditorTool.FILTER && columnNames != null ->
+                        tablePrompt = TablePrompt.FILTER
+
                     else -> actions.onTool(tool)
                 }
             },
@@ -75,7 +93,13 @@ fun EditorScreen(
                     onContentChanged = actions.onContentChanged,
                 )
 
-                ViewMode.TREE, ViewMode.TABLE -> ModePlaceholder(state.viewMode)
+                ViewMode.TABLE -> CsvTableSurface(
+                    content = state.document.content,
+                    onCellChanged = actions.onCellChanged,
+                    onAddRow = actions.onAddRow,
+                )
+
+                ViewMode.TREE -> ModePlaceholder(state.viewMode)
             }
         }
     }
@@ -94,6 +118,30 @@ fun EditorScreen(
         )
     }
 
+    if (columnNames != null) {
+        when (tablePrompt) {
+            TablePrompt.SORT -> SortDialog(
+                columns = columnNames,
+                onConfirm = { column, direction ->
+                    tablePrompt = null
+                    actions.onSort(column, direction)
+                },
+                onDismiss = { tablePrompt = null },
+            )
+
+            TablePrompt.FILTER -> FilterDialog(
+                columns = columnNames,
+                onConfirm = { column, operator, value ->
+                    tablePrompt = null
+                    actions.onFilter(column, operator, value)
+                },
+                onDismiss = { tablePrompt = null },
+            )
+
+            null -> Unit
+        }
+    }
+
     if (settingsVisible) {
         SettingsSheet(
             theme = state.theme,
@@ -107,7 +155,10 @@ fun EditorScreen(
     }
 }
 
-/** Stands in for the tree and table views until they are built. */
+/** Which of the two questions about the columns is being asked. */
+private enum class TablePrompt { SORT, FILTER }
+
+/** Stands in for the tree view until it is built. */
 @Composable
 private fun ModePlaceholder(mode: ViewMode) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

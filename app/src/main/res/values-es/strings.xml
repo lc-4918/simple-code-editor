@@ -63,6 +63,19 @@
     <string name="error_save">No se ha podido guardar el documento</string>
     <string name="error_invalid_url">Introduce una dirección segura, que empiece por https://</string>
 
+    <!-- Sorting, filtering and the table view -->
+    <string name="label_column">Columna</string>
+    <string name="label_direction">Sentido</string>
+    <string name="label_value">Valor</string>
+    <string name="sort_ascending">Ascendente</string>
+    <string name="sort_descending">Descendente</string>
+    <string name="filter_contains">contiene</string>
+    <string name="filter_equals">es</string>
+    <string name="filter_greater">es mayor que</string>
+    <string name="filter_less">es menor que</string>
+    <string name="table_add_row">Añadir una fila</string>
+    <string name="table_not_readable">Este documento no se lee como una tabla</string>
+
     <!-- Search panel of the editing surface -->
     <string name="search_find">Buscar</string>
     <string name="search_replace_field">Reemplazar</string>
