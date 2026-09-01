@@ -81,6 +81,7 @@
     <string name="filter_less">is less than</string>
     <string name="table_add_row">Add a row</string>
     <string name="table_not_readable">This document does not read as a table</string>
+    <string name="tree_not_readable">This document does not read as a tree</string>
 
     <!-- Search panel of the editing surface -->
     <string name="search_find">Find</string>

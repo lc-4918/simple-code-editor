@@ -3,19 +3,17 @@ package fr.lc4918.simplecodeeditor.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import fr.lc4918.simplecodeeditor.editor.EditorTool
 import fr.lc4918.simplecodeeditor.editor.EditorUiState
 import fr.lc4918.simplecodeeditor.format.CsvParser
+import fr.lc4918.simplecodeeditor.format.JsonTree
+import fr.lc4918.simplecodeeditor.format.XmlTree
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.OpenSource
 import fr.lc4918.simplecodeeditor.model.SaveTarget
@@ -37,6 +35,21 @@ fun EditorScreen(
     var urlPrompt by remember { mutableStateOf<UrlPrompt?>(null) }
     var tablePrompt by remember { mutableStateOf<TablePrompt?>(null) }
     val editor = remember { CodeMirrorController() }
+
+    var collapsed by remember { mutableStateOf(emptySet<String>()) }
+
+    // Read once per document, and only while the hierarchy is on screen.
+    val treeRoot = remember(state.viewMode, state.format, state.document.content) {
+        if (state.viewMode != ViewMode.TREE) {
+            null
+        } else {
+            when (state.format) {
+                DocumentFormat.JSON -> JsonTree.parse(state.document.content)
+                DocumentFormat.XML -> XmlTree.parse(state.document.content)
+                else -> null
+            }
+        }
+    }
 
     // Read once per document, and only for the format that has columns.
     val columnNames = remember(state.format, state.document.content) {
@@ -70,7 +83,14 @@ fun EditorScreen(
             state = state,
             onViewModeSelected = actions.onViewModeSelected,
             onTool = { tool ->
+                val tree = treeRoot
                 when {
+                    // Folding means the branches of the hierarchy when it is
+                    // showing, and the blocks of the text otherwise.
+                    tool == EditorTool.COLLAPSE_ALL && tree != null ->
+                        collapsed = containerPaths(tree)
+
+                    tool == EditorTool.EXPAND_ALL && tree != null -> collapsed = emptySet()
                     tool == EditorTool.COLLAPSE_ALL -> editor.foldAll()
                     tool == EditorTool.EXPAND_ALL -> editor.unfoldAll()
                     // Both ask which column to work on before they run.
@@ -99,7 +119,13 @@ fun EditorScreen(
                     onAddRow = actions.onAddRow,
                 )
 
-                ViewMode.TREE -> ModePlaceholder(state.viewMode)
+                ViewMode.TREE -> TreeSurface(
+                    root = treeRoot,
+                    collapsed = collapsed,
+                    onToggle = { path ->
+                        collapsed = if (path in collapsed) collapsed - path else collapsed + path
+                    },
+                )
             }
         }
     }
@@ -158,13 +184,3 @@ fun EditorScreen(
 /** Which of the two questions about the columns is being asked. */
 private enum class TablePrompt { SORT, FILTER }
 
-/** Stands in for the tree view until it is built. */
-@Composable
-private fun ModePlaceholder(mode: ViewMode) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            text = stringResource(mode.labelRes),
-            style = MaterialTheme.typography.titleMedium,
-        )
-    }
-}

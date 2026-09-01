@@ -75,6 +75,7 @@
     <string name="filter_less">es menor que</string>
     <string name="table_add_row">Añadir una fila</string>
     <string name="table_not_readable">Este documento no se lee como una tabla</string>
+    <string name="tree_not_readable">Este documento no se lee como un árbol</string>
 
     <!-- Search panel of the editing surface -->
     <string name="search_find">Buscar</string>

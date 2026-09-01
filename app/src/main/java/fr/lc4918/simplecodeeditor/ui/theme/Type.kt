@@ -15,3 +15,15 @@ val Typography = Typography(
         letterSpacing = 0.5.sp,
     ),
 )
+
+/**
+ * Monospaced style of the code, shared with the hierarchical view so that both
+ * ways of looking at the same document read alike.
+ */
+val CodeTextStyle = TextStyle(
+    fontFamily = FontFamily.Monospace,
+    fontWeight = FontWeight.Normal,
+    fontSize = 13.sp,
+    lineHeight = 20.sp,
+    letterSpacing = 0.sp,
+)

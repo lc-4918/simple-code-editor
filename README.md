@@ -21,7 +21,11 @@ and block folding.
 ## View modes
 
 - **Text** for every format.
-- **Tree** for the nested formats, JSON and XML.
+- **Tree** for the nested formats, JSON and XML. Branches open and close one
+  by one or all at once, XML attributes hang under their element marked with a
+  leading sign, and a document that does not read cleanly says so rather than
+  showing half of itself. The tree reads the document; editing stays in text
+  mode, where the whole document is at hand.
 - **Table** for CSV, which can be edited either as raw text or as a grid of
   rows and columns. The grid reads the first row as the column titles, keeps
   the quoting rules of the format on the way back out, and only quotes the
