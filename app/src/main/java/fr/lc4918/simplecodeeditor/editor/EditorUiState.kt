@@ -10,6 +10,8 @@ import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.FormatCapabilities
 import fr.lc4918.simplecodeeditor.model.LabelledOption
 import fr.lc4918.simplecodeeditor.model.ThemeOption
+import fr.lc4918.simplecodeeditor.model.UpdateMode
+import fr.lc4918.simplecodeeditor.update.ReleaseInfo
 import fr.lc4918.simplecodeeditor.model.ViewMode
 import fr.lc4918.simplecodeeditor.data.SettingsRepository
 
@@ -28,6 +30,18 @@ data class EditorUiState(
     val isLanguageLoaded: Boolean = false,
     val indentWidth: Int = SettingsRepository.DEFAULT_INDENT_WIDTH,
     val csvDelimiter: CsvDelimiter = CsvDelimiter.DEFAULT,
+    val updateMode: UpdateMode = UpdateMode.DEFAULT,
+    val isCheckingUpdate: Boolean = false,
+    /**
+     * What the last check came back with.
+     *
+     * Said in the settings rather than over the document: the settings are
+     * where the check was asked for, and a message behind the sheet that
+     * covers the document is a message nobody reads.
+     */
+    val updateMessageRes: Int? = null,
+    /** The release worth taking, once one has been found. */
+    val availableUpdate: ReleaseInfo? = null,
     val isSearchVisible: Boolean = false,
     val searchQuery: String = "",
     val canUndo: Boolean = false,

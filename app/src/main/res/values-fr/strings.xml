@@ -140,6 +140,22 @@
     <string name="tree_insert_array">Tableau</string>
     <string name="tree_insert_value">Valeur</string>
 
+    <!-- Looking for a newer version of the application -->
+    <string name="settings_updates">Mises à jour</string>
+    <string name="update_automatic">Automatique</string>
+    <string name="update_manual">Manuelle</string>
+    <string name="update_check">Vérifier les mises à jour</string>
+    <string name="update_checking">Recherche d\'une version plus récente</string>
+    <string name="update_up_to_date">C\'est déjà la dernière version</string>
+    <string name="update_check_failed">La vérification n\'a pas pu se faire</string>
+    <string name="update_available">La version %1$s est parue</string>
+    <string name="update_download">Télécharger</string>
+    <string name="update_later">Plus tard</string>
+    <string name="update_unknown_sources">Android demande votre autorisation avant que cette application en installe une autre. Ouvrir le réglage ?</string>
+    <string name="update_open_settings">Ouvrir le réglage</string>
+    <string name="update_downloading">Téléchargement de la version %1$s</string>
+    <string name="update_not_in_debug">Une version de développement ne peut pas se remplacer elle-même</string>
+
     <!-- Common -->
     <string name="action_cancel">Annuler</string>
     <string name="action_confirm">OK</string>

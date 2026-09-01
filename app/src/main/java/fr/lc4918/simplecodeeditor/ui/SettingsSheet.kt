@@ -4,11 +4,16 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +28,7 @@ import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.LabelledOption
 import fr.lc4918.simplecodeeditor.model.ThemeOption
+import fr.lc4918.simplecodeeditor.model.UpdateMode
 
 /** Bottom sheet holding the three persisted preferences. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,10 +38,15 @@ fun SettingsSheet(
     language: AppLanguage,
     indentWidth: Int,
     csvDelimiter: CsvDelimiter,
+    updateMode: UpdateMode,
+    isCheckingUpdate: Boolean,
+    updateMessageRes: Int?,
     onThemeSelected: (ThemeOption) -> Unit,
     onLanguageSelected: (AppLanguage) -> Unit,
     onIndentWidthSelected: (Int) -> Unit,
     onCsvDelimiterSelected: (CsvDelimiter) -> Unit,
+    onUpdateModeSelected: (UpdateMode) -> Unit,
+    onCheckForUpdate: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -75,6 +86,37 @@ fun SettingsSheet(
                 selected = csvDelimiter,
                 onSelected = onCsvDelimiterSelected,
             )
+            OptionSection(
+                title = stringResource(R.string.settings_updates),
+                options = UpdateMode.entries,
+                selected = updateMode,
+                onSelected = onUpdateModeSelected,
+            )
+            // Left to itself, the application looks as it opens and says
+            // nothing unless there is something to say; asked to wait, it
+            // needs to be asked, and this is where.
+            if (updateMode == UpdateMode.MANUAL) {
+                UpdateCheckButton(isChecking = isCheckingUpdate, onCheck = onCheckForUpdate)
+            }
+            updateMessageRes?.let { messageRes ->
+                Text(
+                    text = stringResource(messageRes),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun UpdateCheckButton(isChecking: Boolean, onCheck: () -> Unit) {
+    OutlinedButton(onClick = onCheck, enabled = !isChecking) {
+        if (isChecking) {
+            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.width(12.dp))
+            Text(stringResource(R.string.update_checking))
+        } else {
+            Text(stringResource(R.string.update_check))
         }
     }
 }

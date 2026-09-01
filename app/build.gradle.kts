@@ -88,6 +88,9 @@ android {
     }
     buildFeatures {
         compose = true
+        // The update check compares itself against the manifest the release
+        // carries, and reads its own version from here.
+        buildConfig = true
     }
     androidResources {
         generateLocaleConfig = true

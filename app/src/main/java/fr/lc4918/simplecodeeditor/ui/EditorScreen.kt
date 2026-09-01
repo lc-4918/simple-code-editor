@@ -182,16 +182,25 @@ fun EditorScreen(
         }
     }
 
+    state.availableUpdate?.let { release ->
+        UpdateFlow(release = release, onDone = actions.onUpdateHandled)
+    }
+
     if (settingsVisible) {
         SettingsSheet(
             theme = state.theme,
             language = state.language,
             indentWidth = state.indentWidth,
             csvDelimiter = state.csvDelimiter,
+            updateMode = state.updateMode,
+            isCheckingUpdate = state.isCheckingUpdate,
+            updateMessageRes = state.updateMessageRes,
             onThemeSelected = actions.onThemeSelected,
             onLanguageSelected = actions.onLanguageSelected,
             onIndentWidthSelected = actions.onIndentWidthSelected,
             onCsvDelimiterSelected = actions.onCsvDelimiterSelected,
+            onUpdateModeSelected = actions.onUpdateModeSelected,
+            onCheckForUpdate = actions.onCheckForUpdate,
             onDismiss = { settingsVisible = false },
         )
     }

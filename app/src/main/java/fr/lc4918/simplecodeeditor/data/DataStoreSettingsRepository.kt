@@ -10,6 +10,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import fr.lc4918.simplecodeeditor.model.AppLanguage
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.ThemeOption
+import fr.lc4918.simplecodeeditor.model.UpdateMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -37,6 +38,10 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
             CsvDelimiter.fromStorageKey(preferences[KEY_CSV_DELIMITER])
         }
 
+    override val updateMode: Flow<UpdateMode> = context.settingsDataStore.data.map { preferences ->
+        UpdateMode.fromStorageKey(preferences[KEY_UPDATE_MODE])
+    }
+
     override suspend fun setTheme(option: ThemeOption) {
         context.settingsDataStore.edit { it[KEY_THEME] = option.storageKey }
     }
@@ -58,10 +63,15 @@ class DataStoreSettingsRepository(private val context: Context) : SettingsReposi
         context.settingsDataStore.edit { it[KEY_CSV_DELIMITER] = delimiter.storageKey }
     }
 
+    override suspend fun setUpdateMode(mode: UpdateMode) {
+        context.settingsDataStore.edit { it[KEY_UPDATE_MODE] = mode.storageKey }
+    }
+
     private companion object {
         val KEY_THEME = stringPreferencesKey("theme")
         val KEY_LANGUAGE = stringPreferencesKey("language")
         val KEY_INDENT_WIDTH = intPreferencesKey("indent_width")
         val KEY_CSV_DELIMITER = stringPreferencesKey("csv_delimiter")
+        val KEY_UPDATE_MODE = stringPreferencesKey("update_mode")
     }
 }

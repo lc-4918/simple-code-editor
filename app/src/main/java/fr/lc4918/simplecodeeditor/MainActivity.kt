@@ -193,6 +193,9 @@ class MainActivity : AppCompatActivity() {
                     onLanguageSelected = viewModel::setLanguage,
                     onIndentWidthSelected = viewModel::setIndentWidth,
                     onCsvDelimiterSelected = viewModel::setCsvDelimiter,
+                    onUpdateModeSelected = viewModel::setUpdateMode,
+                    onCheckForUpdate = { viewModel.checkForUpdate() },
+                    onUpdateHandled = viewModel::updateHandled,
                 )
             }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import fr.lc4918.simplecodeeditor.BuildConfig
 import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.data.AndroidDocumentRepository
 import fr.lc4918.simplecodeeditor.data.DataStoreSettingsRepository
@@ -42,6 +43,10 @@ import fr.lc4918.simplecodeeditor.model.DocumentLocation
 import fr.lc4918.simplecodeeditor.model.DocumentSource
 import fr.lc4918.simplecodeeditor.model.EditorDocument
 import fr.lc4918.simplecodeeditor.model.ThemeOption
+import fr.lc4918.simplecodeeditor.model.UpdateMode
+import fr.lc4918.simplecodeeditor.update.GithubUpdateRepository
+import fr.lc4918.simplecodeeditor.update.UpdateInstaller
+import fr.lc4918.simplecodeeditor.update.UpdateRepository
 import fr.lc4918.simplecodeeditor.model.ViewMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +62,10 @@ import kotlinx.coroutines.launch
 class EditorViewModel(
     private val settings: SettingsRepository,
     private val documents: DocumentRepository,
+    private val updates: UpdateRepository,
+    /** What the application is, which is what a release is compared against. */
+    private val currentVersionCode: Int,
+    private val canUpdate: Boolean,
     private val clock: () -> Long = SystemClock::elapsedRealtime,
 ) : ViewModel() {
 
@@ -82,6 +91,21 @@ class EditorViewModel(
         viewModelScope.launch {
             settings.csvDelimiter.collect { value ->
                 _uiState.update { it.copy(csvDelimiter = value) }
+            }
+        }
+        viewModelScope.launch {
+            // Once for the life of the application, the first time the setting
+            // is seen to be automatic. Comparing what arrives with what the
+            // state holds would never fire: the state starts on the same value.
+            var looked = false
+            settings.updateMode.collect { mode ->
+                _uiState.update { it.copy(updateMode = mode) }
+                // Looking on its own means looking as the application opens,
+                // and saying nothing when there is nothing to say.
+                if (!looked && mode == UpdateMode.AUTOMATIC) {
+                    looked = true
+                    checkForUpdate(quietly = true)
+                }
             }
         }
         // Reading the state rather than being told covers every way the
@@ -507,6 +531,59 @@ class EditorViewModel(
      * Without the rewrite the choice would only show on the next document,
      * which is not what picking a separator while looking at a grid means.
      */
+    fun setUpdateMode(mode: UpdateMode) {
+        viewModelScope.launch { settings.setUpdateMode(mode) }
+        _uiState.update { it.copy(updateMessageRes = null) }
+    }
+
+    /**
+     * Looks for a version newer than this one.
+     *
+     * @param quietly true when nobody asked, so that only a release worth
+     * taking is worth saying anything about
+     */
+    fun checkForUpdate(quietly: Boolean = false) {
+        if (_uiState.value.isCheckingUpdate) return
+        if (!canUpdate) {
+            if (!quietly) setUpdateMessage(R.string.update_not_in_debug)
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { state ->
+                // A check nobody asked for does not wipe the answer to one
+                // that was asked for.
+                state.copy(
+                    isCheckingUpdate = true,
+                    updateMessageRes = if (quietly) state.updateMessageRes else null,
+                )
+            }
+            val release = runCatching { updates.latest() }.getOrNull()
+            _uiState.update { state ->
+                state.copy(
+                    isCheckingUpdate = false,
+                    availableUpdate = release?.takeIf { it.versionCode > currentVersionCode },
+                )
+            }
+            if (quietly) return@launch
+            when {
+                release == null -> setUpdateMessage(R.string.update_check_failed)
+                release.versionCode <= currentVersionCode ->
+                    setUpdateMessage(R.string.update_up_to_date)
+
+                else -> Unit
+            }
+        }
+    }
+
+    private fun setUpdateMessage(messageRes: Int) {
+        _uiState.update { it.copy(updateMessageRes = messageRes) }
+    }
+
+    /** Called once the release has been taken or turned down. */
+    fun updateHandled() {
+        _uiState.update { it.copy(availableUpdate = null) }
+    }
+
     fun setCsvDelimiter(delimiter: CsvDelimiter) {
         viewModelScope.launch { settings.setCsvDelimiter(delimiter) }
         rewriteTable { table -> table.copy(delimiter = delimiter.character) }
@@ -531,6 +608,9 @@ class EditorViewModel(
                 EditorViewModel(
                     settings = DataStoreSettingsRepository(application),
                     documents = AndroidDocumentRepository(application),
+                    updates = GithubUpdateRepository(),
+                    currentVersionCode = BuildConfig.VERSION_CODE,
+                    canUpdate = UpdateInstaller.isSupported,
                 )
             }
         }

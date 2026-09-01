@@ -11,6 +11,7 @@ import fr.lc4918.simplecodeeditor.model.SaveTarget
 import fr.lc4918.simplecodeeditor.model.SortDirection
 import fr.lc4918.simplecodeeditor.model.TreeNode
 import fr.lc4918.simplecodeeditor.model.ThemeOption
+import fr.lc4918.simplecodeeditor.model.UpdateMode
 import fr.lc4918.simplecodeeditor.model.ViewMode
 
 /**
@@ -46,4 +47,7 @@ class EditorActions(
     val onLanguageSelected: (AppLanguage) -> Unit,
     val onIndentWidthSelected: (Int) -> Unit,
     val onCsvDelimiterSelected: (CsvDelimiter) -> Unit,
+    val onUpdateModeSelected: (UpdateMode) -> Unit,
+    val onCheckForUpdate: () -> Unit,
+    val onUpdateHandled: () -> Unit,
 )

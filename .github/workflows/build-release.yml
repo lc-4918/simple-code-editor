@@ -101,6 +101,35 @@ jobs:
           ls -l app/build/outputs/apk/release/
           test -f "app/build/outputs/apk/release/simple-code-${TAG}.apk"
 
+      # What the application reads to learn that a newer one exists. Published
+      # as an asset of the release rather than committed, so GitHub serves it
+      # from its own network under a stable address, with no quota; the API
+      # would allow sixty requests an hour and an address that moves.
+      - name: Write the manifest the application checks
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          VERSION="${TAG#v}"
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+          # The same arithmetic as build.gradle.kts, which is what the
+          # application compares against. The two have to agree.
+          VERSION_CODE=$(( MAJOR * 10000 + MINOR * 100 + PATCH ))
+          URL="${{ github.server_url }}/${{ github.repository }}/releases/download/${TAG}/simple-code-${TAG}.apk"
+
+          # The subjects of the commits since the tag before this one, which is
+          # what the dialogue shows. Capped, so a long release still fits.
+          PREVIOUS=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+          RANGE="${TAG}"
+          [ -n "$PREVIOUS" ] && RANGE="${PREVIOUS}..${TAG}"
+          CHANGELOG=$(git log --no-merges -n 10 --pretty=format:'- %s' "$RANGE")
+
+          jq -n --arg v "$VERSION" --argjson c "$VERSION_CODE" \
+                --arg d "$(date -u +%Y-%m-%d)" --arg u "$URL" --arg l "$CHANGELOG" \
+                '{version:$v, versionCode:$c, releaseDate:$d, apkUrl:$u, changelog:$l}' \
+            > "$RUNNER_TEMP/latest-release.json"
+          cat "$RUNNER_TEMP/latest-release.json"
+
       # The release is published under the identity of the token given here
       # rather than the GITHUB_TOKEN of the run: that one belongs to
       # github-actions[bot], which would then stand as the author of every
@@ -116,4 +145,6 @@ jobs:
           token: ${{ secrets.RELEASE_PAT }}
           name: ${{ github.ref_name }}
           generate_release_notes: true
-          files: app/build/outputs/apk/release/*.apk
+          files: |
+            app/build/outputs/apk/release/*.apk
+            ${{ runner.temp }}/latest-release.json

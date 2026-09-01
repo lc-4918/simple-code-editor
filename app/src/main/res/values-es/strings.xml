@@ -140,6 +140,22 @@
     <string name="tree_insert_array">Matriz</string>
     <string name="tree_insert_value">Valor</string>
 
+    <!-- Looking for a newer version of the application -->
+    <string name="settings_updates">Actualizaciones</string>
+    <string name="update_automatic">Automática</string>
+    <string name="update_manual">Manual</string>
+    <string name="update_check">Buscar actualizaciones</string>
+    <string name="update_checking">Buscando una versión más reciente</string>
+    <string name="update_up_to_date">Ya es la última versión</string>
+    <string name="update_check_failed">No se ha podido comprobar</string>
+    <string name="update_available">Ha salido la versión %1$s</string>
+    <string name="update_download">Descargar</string>
+    <string name="update_later">Más tarde</string>
+    <string name="update_unknown_sources">Android pide tu permiso antes de que esta aplicación instale otra. ¿Abrir el ajuste?</string>
+    <string name="update_open_settings">Abrir el ajuste</string>
+    <string name="update_downloading">Descargando la versión %1$s</string>
+    <string name="update_not_in_debug">Una versión de desarrollo no puede reemplazarse a sí misma</string>
+
     <!-- Common -->
     <string name="action_cancel">Cancelar</string>
     <string name="action_confirm">Aceptar</string>

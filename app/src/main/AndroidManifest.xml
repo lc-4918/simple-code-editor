@@ -2,8 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Only for opening and saving a document at an address. -->
+    <!-- Opening and saving a document at an address, and fetching the manifest
+         that says whether a newer version of the application exists. -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Handing a downloaded update to the installer of the system. The
+         application is not on a store, so nothing else would offer it. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:allowBackup="true"

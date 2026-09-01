@@ -146,6 +146,22 @@
     <string name="tree_insert_array">Array</string>
     <string name="tree_insert_value">Value</string>
 
+    <!-- Looking for a newer version of the application -->
+    <string name="settings_updates">Updates</string>
+    <string name="update_automatic">Automatic</string>
+    <string name="update_manual">Manual</string>
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Looking for a newer version</string>
+    <string name="update_up_to_date">This is the latest version</string>
+    <string name="update_check_failed">The check could not be made</string>
+    <string name="update_available">Version %1$s is out</string>
+    <string name="update_download">Download</string>
+    <string name="update_later">Later</string>
+    <string name="update_unknown_sources">Android asks for your permission before this application may install another. Open the setting?</string>
+    <string name="update_open_settings">Open the setting</string>
+    <string name="update_downloading">Downloading version %1$s</string>
+    <string name="update_not_in_debug">A development build cannot replace itself</string>
+
     <!-- Common -->
     <string name="action_cancel">Cancel</string>
     <string name="action_confirm">OK</string>

@@ -165,6 +165,9 @@ format is not something repairing could address: the document already reads.
 - Interface language: English by default, French and Spanish available.
 - Theme: system, light or dark.
 - Indentation width.
+- Updates: automatic or manual. Left to itself the application looks once as
+  it opens and says nothing unless there is something to say; asked to wait, it
+  waits for the button under the choice.
 - CSV separator: comma, semicolon or tab. A document that is opened keeps the
   separator it was written with, which the reader works out on its own; this
   choice is what a new document gets, what an opened one falls back to when
@@ -186,6 +189,33 @@ under `editor-web`, which needs Node.
     cd editor-web
     npm install
     npm run build
+
+## Updates
+
+The application is not on a store, so it looks after its own updating. Each
+release carries a small manifest beside its APK, written by the workflow from
+the tag, and the application reads it from the address GitHub keeps stable for
+the latest release. That address is served from its own network, where the API
+would allow sixty requests an hour per address and run out.
+
+What is compared is the version code, an integer both the workflow and the
+build script derive from the tag by the same arithmetic. Comparing the names
+would mean reading a string that a development build ends with a mark reading
+as newer than the release.
+
+A newer version is offered, brought down by the download service into the
+private folder of the application, which needs no storage permission, and
+handed to the installer of the system. Android asks its own permission before
+one application may install another, so it is asked for before the download
+rather than after, where the installer would open and fail without a word. The
+files of updates already installed are swept away on the way, one otherwise
+staying behind for every update ever taken.
+
+A development build says so rather than looking: it carries another
+application id and another signature, so a release could not replace it.
+
+The manifest was added to the workflow after 1.1.0, so the check finds nothing
+until a release is cut with it.
 
 ## Releases
 

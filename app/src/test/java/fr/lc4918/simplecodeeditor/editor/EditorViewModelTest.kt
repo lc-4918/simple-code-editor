@@ -3,6 +3,9 @@ package fr.lc4918.simplecodeeditor.editor
 import fr.lc4918.simplecodeeditor.R
 import fr.lc4918.simplecodeeditor.fake.FakeDocumentRepository
 import fr.lc4918.simplecodeeditor.fake.FakeSettingsRepository
+import fr.lc4918.simplecodeeditor.fake.FakeUpdateRepository
+import fr.lc4918.simplecodeeditor.model.UpdateMode
+import fr.lc4918.simplecodeeditor.update.ReleaseInfo
 import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.model.CsvDelimiter
 import fr.lc4918.simplecodeeditor.model.DocumentLocation
@@ -34,12 +37,25 @@ class EditorViewModelTest {
 
     private val dispatcher = StandardTestDispatcher()
     private val documents = FakeDocumentRepository()
+    private val updates = FakeUpdateRepository()
+    private val settings = FakeSettingsRepository()
     private var now = 0L
 
-    private fun viewModel() = EditorViewModel(
-        settings = FakeSettingsRepository(),
+    private fun viewModel(canUpdate: Boolean = true) = EditorViewModel(
+        settings = settings,
         documents = documents,
+        updates = updates,
+        currentVersionCode = 10_100,
+        canUpdate = canUpdate,
         clock = { now },
+    )
+
+    private fun release(code: Int) = ReleaseInfo(
+        version = "9.9.9",
+        versionCode = code,
+        releaseDate = "2026-09-01",
+        apkUrl = "https://example.com/a.apk",
+        changelog = "- something",
     )
 
     @Before
@@ -596,6 +612,96 @@ class EditorViewModelTest {
         model.removeNode(fr.lc4918.simplecodeeditor.model.TreeNode("x", NodeKind.STRING, "y"))
 
         assertEquals(source, model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a newer release is offered`() = runTest(dispatcher) {
+        updates.latest = release(code = 10_200)
+        val model = viewModel()
+
+        model.checkForUpdate()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("9.9.9", model.uiState.value.availableUpdate?.version)
+    }
+
+    @Test
+    fun `a release no newer than this one is not offered, and says so`() = runTest(dispatcher) {
+        updates.latest = release(code = 10_100)
+        val model = viewModel()
+
+        model.checkForUpdate()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.availableUpdate)
+        assertEquals(R.string.update_up_to_date, model.uiState.value.updateMessageRes)
+    }
+
+    @Test
+    fun `a check that cannot be made says so when it was asked for`() = runTest(dispatcher) {
+        updates.failure = java.io.IOException("no network")
+        val model = viewModel()
+
+        model.checkForUpdate()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(R.string.update_check_failed, model.uiState.value.updateMessageRes)
+    }
+
+    @Test
+    fun `a check nobody asked for stays quiet about a failure`() = runTest(dispatcher) {
+        updates.failure = java.io.IOException("no network")
+        val model = viewModel()
+
+        model.checkForUpdate(quietly = true)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.updateMessageRes)
+    }
+
+    @Test
+    fun `a check nobody asked for still offers what it found`() = runTest(dispatcher) {
+        updates.latest = release(code = 10_200)
+        val model = viewModel()
+
+        model.checkForUpdate(quietly = true)
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("9.9.9", model.uiState.value.availableUpdate?.version)
+    }
+
+    @Test
+    fun `a build that cannot replace itself does not pretend to look`() = runTest(dispatcher) {
+        updates.latest = release(code = 10_200)
+        val model = viewModel(canUpdate = false)
+
+        model.checkForUpdate()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals(null, model.uiState.value.availableUpdate)
+        assertEquals(R.string.update_not_in_debug, model.uiState.value.updateMessageRes)
+    }
+
+    @Test
+    fun `a release turned down is not offered again`() = runTest(dispatcher) {
+        updates.latest = release(code = 10_200)
+        val model = viewModel()
+        model.checkForUpdate()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        model.updateHandled()
+
+        assertEquals(null, model.uiState.value.availableUpdate)
+    }
+
+    @Test
+    fun `looking on its own happens without being asked`() = runTest(dispatcher) {
+        updates.latest = release(code = 10_200)
+        val model = viewModel()
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("9.9.9", model.uiState.value.availableUpdate?.version)
+        assertEquals(UpdateMode.AUTOMATIC, model.uiState.value.updateMode)
     }
 
     @Test
