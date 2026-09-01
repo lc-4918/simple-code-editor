@@ -144,6 +144,7 @@ class MainActivity : AppCompatActivity() {
                     },
                     onViewModeSelected = viewModel::setViewMode,
                     onTool = viewModel::onTool,
+                    onRepaired = viewModel::applyRepair,
                     onCellChanged = viewModel::onCellChanged,
                     onAddRow = viewModel::addRow,
                     onSort = viewModel::sort,

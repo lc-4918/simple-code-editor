@@ -27,6 +27,7 @@ import fr.lc4918.simplecodeeditor.model.DocumentFormat
 import fr.lc4918.simplecodeeditor.ui.theme.EditorColors
 import fr.lc4918.simplecodeeditor.ui.theme.LocalEditorColors
 import org.json.JSONObject
+import org.json.JSONTokener
 import java.util.Locale
 
 private const val EDITOR_URL = "file:///android_asset/editor/index.html"
@@ -166,6 +167,26 @@ class CodeMirrorController {
         call("SimpleCodeEditor.setSearchVisible($visible);")
     }
 
+    /**
+     * Asks the bundle to make a broken JSON document readable again.
+     *
+     * The answer comes back through [onResult]: null when nothing could be
+     * made of the document, and null as well when the surface is not on
+     * screen to be asked, which is the case outside text mode.
+     */
+    fun repair(content: String, onResult: (String?) -> Unit) {
+        val view = webView
+        if (view == null || !isReady) {
+            onResult(null)
+            return
+        }
+        view.post {
+            view.evaluateJavascript("SimpleCodeEditor.repair(${content.toJs()});") { answer ->
+                onResult(answer.asJsString())
+            }
+        }
+    }
+
     /** Marks the spot the document could not be read past, or clears the mark. */
     fun setDiagnostic(offset: Int?, message: String?) {
         val problem = if (offset == null || message == null) {
@@ -253,6 +274,12 @@ private class LoggingWebViewClient : WebViewClient() {
 private const val LOG_TAG = "EditorSurface"
 
 private fun String.toJs(): String = JSONObject.quote(this)
+
+/** What the bundle answered, when it answered with a string rather than null. */
+private fun String?.asJsString(): String? {
+    if (this == null) return null
+    return runCatching { JSONTokener(this).nextValue() }.getOrNull() as? String
+}
 
 private fun EditorColors.toJson(): String = JSONObject().apply {
     put("dark", dark)

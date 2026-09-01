@@ -92,7 +92,20 @@ fun EditorScreen(
                 }
             },
         )
-        state.diagnostic?.let { diagnostic -> DiagnosticBar(diagnostic) }
+        state.diagnostic?.let { diagnostic ->
+            DiagnosticBar(
+                diagnostic = diagnostic,
+                // Repairing is the bundle's doing, so it is only offered where
+                // the bundle is on screen, and only for the format it knows.
+                onRepair = if (state.format == DocumentFormat.JSON &&
+                    state.viewMode == ViewMode.TEXT
+                ) {
+                    { editor.repair(state.document.content, actions.onRepaired) }
+                } else {
+                    null
+                },
+            )
+        }
         Box(modifier = Modifier.weight(1f)) {
             when (state.viewMode) {
                 ViewMode.TEXT -> CodeMirrorSurface(

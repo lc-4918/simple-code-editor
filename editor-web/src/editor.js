@@ -10,6 +10,7 @@ import { defaultKeymap, indentWithTab } from "@codemirror/commands";
 import { HighlightStyle, bracketMatching, codeFolding, foldAll, foldGutter, foldKeymap, indentOnInput, indentUnit, syntaxHighlighting, unfoldAll } from "@codemirror/language";
 import { closeSearchPanel, openSearchPanel, search, searchKeymap } from "@codemirror/search";
 import { lintGutter, setDiagnostics } from "@codemirror/lint";
+import { jsonrepair } from "jsonrepair";
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
@@ -188,6 +189,20 @@ window.SimpleCodeEditor = {
 
     setColors(colors) {
         view.dispatch({ effects: themeConf.reconfigure(themeFor(colors)) });
+    },
+
+    /**
+     * Makes a broken JSON document readable again, and returns it.
+     *
+     * Returns null when nothing can be made of it, which leaves the document
+     * as it was rather than replacing it with a guess.
+     */
+    repair(text) {
+        try {
+            return jsonrepair(text);
+        } catch (error) {
+            return null;
+        }
     },
 
     /**

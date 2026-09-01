@@ -30,6 +30,7 @@ class EditorActions(
     val onCopy: (CopyVariant) -> Unit,
     val onViewModeSelected: (ViewMode) -> Unit,
     val onTool: (EditorTool) -> Unit,
+    val onRepaired: (String?) -> Unit,
     val onCellChanged: (row: Int, column: Int, value: String) -> Unit,
     val onAddRow: () -> Unit,
     val onSort: (column: Int, direction: SortDirection) -> Unit,

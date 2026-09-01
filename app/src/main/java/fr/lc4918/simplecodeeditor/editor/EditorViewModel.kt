@@ -361,6 +361,21 @@ class EditorViewModel(
         rewrite { CsvParser.format(transform(table)) }
     }
 
+    /**
+     * Puts back a document the bundle managed to repair.
+     *
+     * A repair that changes nothing did not work, whatever it answered, so it
+     * is reported as a failure rather than announced as a success.
+     */
+    fun applyRepair(repaired: String?) {
+        if (repaired == null || repaired == _uiState.value.document.content) {
+            setStatus(R.string.error_repair)
+            return
+        }
+        rewrite { repaired }
+        setStatus(R.string.status_repaired)
+    }
+
     /** Reports that the document has just been put on the clipboard. */
     fun reportCopied() {
         setStatus(R.string.status_copied)

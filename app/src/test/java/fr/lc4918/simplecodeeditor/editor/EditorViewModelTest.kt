@@ -400,6 +400,44 @@ class EditorViewModelTest {
     }
 
     @Test
+    fun `a repaired document replaces the broken one in a single step`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = "{a:1,}"))
+        dispatcher.scheduler.advanceUntilIdle()
+
+        model.applyRepair("""{"a":1}""")
+        dispatcher.scheduler.advanceUntilIdle()
+
+        assertEquals("""{"a":1}""", model.uiState.value.document.content)
+        assertEquals(R.string.status_repaired, model.uiState.value.statusMessageRes)
+        assertEquals(null, model.uiState.value.diagnostic)
+
+        model.undo()
+        assertEquals("{a:1,}", model.uiState.value.document.content)
+    }
+
+    @Test
+    fun `a repair that answers nothing leaves the document alone`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = "{oops"))
+
+        model.applyRepair(null)
+
+        assertEquals("{oops", model.uiState.value.document.content)
+        assertEquals(R.string.error_repair, model.uiState.value.statusMessageRes)
+    }
+
+    @Test
+    fun `a repair that changes nothing is reported as a failure`() = runTest(dispatcher) {
+        val model = viewModel()
+        model.setDocument(EditorDocument.empty(DocumentFormat.JSON).copy(content = "{oops"))
+
+        model.applyRepair("{oops")
+
+        assertEquals(R.string.error_repair, model.uiState.value.statusMessageRes)
+    }
+
+    @Test
     fun `theme changes are persisted and reflected in the state`() = runTest(dispatcher) {
         val model = viewModel()
         model.setTheme(ThemeOption.DARK)

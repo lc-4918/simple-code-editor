@@ -79,6 +79,21 @@ time, not a list. Reporting several at once needs a reader that recovers from a
 problem and carries on, which these do not do. The other formats are not read
 this way, so nothing is reported for them.
 
+A broken JSON document can be repaired, from the report itself, where the
+reason it is needed already is. The repair is `jsonrepair`, which travels in
+the bundle with the editor: it quotes bare keys and values, drops trailing
+commas and comments, turns single quotes into double ones and reads a document
+written one object per line. It follows that repairing is offered in text mode
+only, where the bundle is on screen, and for JSON only. A repair that changes
+nothing is reported as a failure, whatever it answered, and a repair that works
+is one step in the history: one undo brings the broken document back.
+
+What is repaired is not shown side by side with what it replaced. Undoing is
+the way to compare the two.
+
+XML is read the same way but not repaired, there being no equivalent to lean
+on.
+
 ## Settings
 
 - Interface language: English by default, French and Spanish available.

@@ -18,7 +18,8 @@
     "@codemirror/search": "^6.5.11",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.5",
-    "@lezer/highlight": "^1.2.1"
+    "@lezer/highlight": "^1.2.1",
+    "jsonrepair": "^3.15.0"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"

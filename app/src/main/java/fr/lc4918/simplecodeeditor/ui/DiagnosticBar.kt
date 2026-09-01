@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,9 +27,16 @@ import fr.lc4918.simplecodeeditor.model.Diagnostic
  * It sits under the toolbar in every mode: the editing surface marks the spot
  * in the text, but the tree and the grid have no text to mark, and the reason
  * belongs in words either way.
+ *
+ * A way to repair the document is offered here rather than in the toolbar,
+ * next to the reason it is needed and only while it is.
  */
 @Composable
-fun DiagnosticBar(diagnostic: Diagnostic, modifier: Modifier = Modifier) {
+fun DiagnosticBar(
+    diagnostic: Diagnostic,
+    onRepair: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -43,7 +51,7 @@ fun DiagnosticBar(diagnostic: Diagnostic, modifier: Modifier = Modifier) {
             tint = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier.size(18.dp),
         )
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(diagnostic.problem.labelRes),
                 style = MaterialTheme.typography.bodyMedium,
@@ -58,6 +66,14 @@ fun DiagnosticBar(diagnostic: Diagnostic, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onErrorContainer,
             )
+        }
+        onRepair?.let { repair ->
+            TextButton(onClick = repair) {
+                Text(
+                    text = stringResource(R.string.action_repair),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                )
+            }
         }
     }
 }

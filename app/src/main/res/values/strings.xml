@@ -66,6 +66,9 @@
     <string name="url_address">Address</string>
     <string name="url_hint">https://example.com/data.json</string>
     <string name="status_saved">Document saved</string>
+    <string name="action_repair">Repair</string>
+    <string name="status_repaired">Document repaired</string>
+    <string name="error_repair">Nothing could be made of this document</string>
     <string name="status_copied">Copied to the clipboard</string>
     <string name="error_open">The document could not be opened</string>
     <string name="error_save">The document could not be saved</string>
